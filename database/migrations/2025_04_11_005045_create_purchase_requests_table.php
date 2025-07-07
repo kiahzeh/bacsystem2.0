@@ -1,0 +1,39 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('purchase_requests', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->date('order_date');
+            $table->string('department');
+            $table->string('status')->default('ATP');
+            $table->text('remarks')->nullable();
+            $table->foreignId('user_id')->constrained(); // Reference to the user who created the request
+            $table->string('pr_number'); // Original PR number
+            $table->foreignId('consolidated_request_id')->nullable()->constrained()->onDelete('cascade');
+            $table->timestamps();
+
+               
+                
+            
+            
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('purchase_requests');
+    }
+};
