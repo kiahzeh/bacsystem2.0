@@ -35,18 +35,12 @@ RUN chmod -R 755 /var/www/html
 RUN echo '#!/bin/bash' > /usr/local/bin/start.sh && \
     echo 'cd /var/www/html' >> /usr/local/bin/start.sh && \
     echo 'echo "Starting Laravel application..."' >> /usr/local/bin/start.sh && \
-    echo 'echo "Testing database connection..."' >> /usr/local/bin/start.sh && \
-    echo 'php artisan tinker --execute="DB::connection()->getPdo(); echo \"Database connected successfully\";" || echo "Database connection failed"' >> /usr/local/bin/start.sh && \
-    echo 'echo "Setting up Laravel..."' >> /usr/local/bin/start.sh && \
-    echo 'php artisan config:cache || echo "Config cache failed"' >> /usr/local/bin/start.sh && \
-    echo 'php artisan route:cache || echo "Route cache failed"' >> /usr/local/bin/start.sh && \
-    echo 'php artisan view:cache || echo "View cache failed"' >> /usr/local/bin/start.sh && \
     echo 'echo "Running migrations..."' >> /usr/local/bin/start.sh && \
-    echo 'php artisan migrate --force || echo "Migration failed, continuing..."' >> /usr/local/bin/start.sh && \
-    echo 'echo "Running seeders..."' >> /usr/local/bin/start.sh && \
-    echo 'php artisan db:seed --force || echo "Seeding failed, continuing..."' >> /usr/local/bin/start.sh && \
-    echo 'echo "Starting Apache..."' >> /usr/local/bin/start.sh && \
-    echo 'apache2-foreground' >> /usr/local/bin/start.sh && \
+    echo 'php artisan migrate --force' >> /usr/local/bin/start.sh && \
+    echo 'echo "Migrations completed. Running seeders..."' >> /usr/local/bin/start.sh && \
+    echo 'php artisan db:seed --force' >> /usr/local/bin/start.sh && \
+    echo 'echo "Seeders completed. Starting Apache..."' >> /usr/local/bin/start.sh && \
+    echo 'exec apache2-foreground' >> /usr/local/bin/start.sh && \
     chmod +x /usr/local/bin/start.sh
 
 # Configure Apache to serve from public directory
