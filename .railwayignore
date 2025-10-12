@@ -1,0 +1,6 @@
+# Ignore Docker files to force Nixpacks usage
+Dockerfile*
+docker-compose*
+.dockerignore
+vendor/laravel/sail/
+vendor/twilio/sdk/Dockerfile*
