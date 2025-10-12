@@ -77,7 +77,7 @@ RUN php artisan route:clear && php artisan route:cache
 RUN php artisan view:clear && php artisan view:cache
 
 # Expose port
-EXPOSE 8000
+EXPOSE $PORT
 
 # Start command
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+CMD php artisan serve --host=0.0.0.0 --port=$PORT
