@@ -14,6 +14,12 @@ class ReportController extends Controller
         $this->middleware(['auth', 'admin']);
     }
 
+    public function generateMonthlyReport()
+    {
+        // For now, just redirect to dashboard or show a simple view
+        return redirect()->route('dashboard')->with('info', 'Monthly report feature coming soon!');
+    }
+
     public function exportMonthlyPurchaseRequests()
     {
         $date = Carbon::now();

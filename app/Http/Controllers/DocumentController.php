@@ -29,11 +29,11 @@ class DocumentController extends Controller
             'purchase_request_id' => $purchaseRequest->id,
             'filename' => $filename,
             'original_filename' => $originalFilename,
-            'file_path' => $path,
+            'path' => $path,
             'status' => $request->status,
             'mime_type' => $file->getMimeType(),
             'file_size' => $file->getSize(),
-            'user_id' => auth()->id()
+            'uploaded_by' => auth()->id()
         ]);
 
         return back()->with('success', 'Document uploaded successfully.');
@@ -46,7 +46,43 @@ class DocumentController extends Controller
             abort(403);
         }
 
-        return Storage::download($document->file_path, $document->original_filename);
+        // Check if file path exists
+        if (!$document->path) {
+            abort(404, 'File path not found');
+        }
+
+        // Check if file exists in storage
+        if (!Storage::exists($document->path)) {
+            abort(404, 'File not found in storage');
+        }
+
+        return Storage::download($document->path, $document->original_filename);
+    }
+
+    public function view(Document $document)
+    {
+        // Check if user has permission to view
+        if (!auth()->user()->can('view', $document->purchaseRequest)) {
+            abort(403);
+        }
+
+        // Check if file path exists
+        if (!$document->path) {
+            abort(404, 'File path not found');
+        }
+
+        // Check if file exists in storage
+        if (!Storage::exists($document->path)) {
+            abort(404, 'File not found in storage');
+        }
+
+        // Get file content
+        $file = Storage::get($document->path);
+        
+        // Return file with appropriate headers for viewing in browser
+        return response($file)
+            ->header('Content-Type', $document->mime_type)
+            ->header('Content-Disposition', 'inline; filename="' . $document->original_filename . '"');
     }
 
     public function destroy(Document $document)
@@ -56,14 +92,42 @@ class DocumentController extends Controller
             abort(403);
         }
 
-        // Delete the file from storage if file_path is not null
-        if ($document->file_path) {
-            Storage::delete($document->file_path);
+        // Delete the file from storage if path exists and file exists
+        if ($document->path && Storage::exists($document->path)) {
+            Storage::delete($document->path);
         }
 
         // Delete record from database
         $document->delete();
 
         return redirect()->back()->with('success', 'Document deleted successfully.');
+    }
+
+    public function approve(Document $document)
+    {
+        // Check if user has permission to approve
+        if (!auth()->user()->isAdmin()) {
+            abort(403);
+        }
+
+        $document->approve();
+
+        return redirect()->back()->with('success', 'Document approved successfully.');
+    }
+
+    public function reject(Request $request, Document $document)
+    {
+        // Check if user has permission to reject
+        if (!auth()->user()->isAdmin()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'rejection_reason' => 'required|string|max:500'
+        ]);
+
+        $document->reject($request->rejection_reason);
+
+        return redirect()->back()->with('success', 'Document rejected successfully.');
     }
 }

@@ -28,7 +28,7 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="glass-card overflow-hidden shadow-sm sm:rounded-lg p-6">
+            <div class="glassmorphism-card overflow-hidden shadow-sm sm:rounded-lg p-6">
                 <!-- Request Details -->
                 <div class="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -90,22 +90,72 @@
                                 <div class="bg-orange-400 h-2.5 rounded-full transition-all duration-500" style="width: {{ $progress }}%"></div>
                             </div>
                             <p class="text-sm text-white glass-text">Progress: {{ number_format($progress, 1) }}%</p>
+                            
+                            @if($purchaseRequest->status === 'Completed')
+                                @php
+                                    $autoCompletedSteps = $purchaseRequest->statusHistory()
+                                        ->where('is_skipped', true)
+                                        ->where('status', '!=', 'Completed')
+                                        ->count();
+                                    $totalSteps = count($allStatuses);
+                                    $completedSteps = $purchaseRequest->statusHistory()
+                                        ->where('completed_at', '!=', null)
+                                        ->where('status', '!=', 'Completed')
+                                        ->count();
+                                @endphp
+                                @if($autoCompletedSteps > 0)
+                                    <div class="mt-3 p-3 bg-yellow-500/10 border border-yellow-400/30 rounded-lg">
+                                        <div class="flex items-center text-yellow-200 text-sm">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            <span class="font-medium">Workflow Summary:</span>
+                                        </div>
+                                        <div class="mt-2 text-xs text-yellow-300 space-y-1">
+                                            <p>• {{ $completedSteps }} steps completed normally</p>
+                                            <p>• {{ $autoCompletedSteps }} steps auto-completed when PR was finished</p>
+                                            <p>• Total: {{ $totalSteps }} workflow steps</p>
+                                        </div>
+                                    </div>
+                                @endif
+                            @endif
                         </div>
                     </div>
                 </div>
 
                 <!-- Workflow Management Section (Admin Only) -->
                 @if(auth()->user()->isAdmin())
-                    <div class="mb-8 glass-card rounded-lg p-6">
-                        <h3 class="text-lg font-bold text-white glass-heading mb-4 flex items-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-                            </svg>
-                            Customize Workflow Steps
-                        </h3>
-                        <p class="text-white/70 text-sm mb-4">
-                            Add or remove workflow steps specific to this purchase request. Changes only affect this PR.
-                        </p>
+                    <div class="mb-8 glassmorphism-card rounded-lg p-6 transition-all duration-300" 
+                         :class="{ 'ring-2 ring-blue-400/30 bg-blue-500/5': workflowOpen }"
+                         x-data="{ workflowOpen: false }"
+                         x-init="workflowOpen = localStorage.getItem('workflowOpen') === 'true'"
+                         @workflow-open-changed.window="localStorage.setItem('workflowOpen', workflowOpen)">
+                        <div class="flex items-center justify-between cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-colors duration-200" @click="workflowOpen = !workflowOpen">
+                            <h3 class="text-lg font-bold text-white glass-heading flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                                </svg>
+                                Customize Workflow Steps
+                            </h3>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-white/70 text-sm" x-text="workflowOpen ? 'Click to collapse' : 'Click to expand'"></span>
+                                <svg class="w-5 h-5 text-white/70 transition-transform duration-200" 
+                                     :class="{ 'rotate-180': workflowOpen }"
+                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        
+                        <div x-show="workflowOpen" x-transition:enter="transition ease-out duration-200" 
+                             x-transition:enter-start="opacity-0 transform -translate-y-2" 
+                             x-transition:enter-end="opacity-100 transform translate-y-0"
+                             x-transition:leave="transition ease-in duration-150" 
+                             x-transition:leave-start="opacity-100 transform translate-y-0" 
+                             x-transition:leave-end="opacity-0 transform -translate-y-2">
+                            <p class="text-white/70 text-sm mb-4 mt-4">
+                                Add or remove workflow steps specific to this purchase request. Changes only affect this PR.
+                            </p>
                         
                         <!-- Add New Step Form -->
                         <form method="POST" action="{{ route('purchase-requests.workflow.add-step', $purchaseRequest) }}" class="mb-6">
@@ -128,9 +178,9 @@
                         <!-- Current Workflow Steps -->
                         <div class="mb-4">
                             <h4 class="text-white glass-heading mb-3">Current Workflow Steps</h4>
-                            <div class="space-y-2">
+                            <ul id="workflow-steps-list" class="space-y-2">
                                 @foreach($allStatuses as $index => $status)
-                                    <div class="flex items-center justify-between p-3 glass-card rounded-lg">
+                                    <li class="workflow-step-item flex items-center justify-between p-3 glassmorphism-card rounded-lg" data-index="{{ $index }}">
                                         <div class="flex items-center space-x-3">
                                             <span class="text-white/70 text-sm font-mono">#{{ $index + 1 }}</span>
                                             <span class="text-white glass-text">{{ $status }}</span>
@@ -146,10 +196,33 @@
                                                 Remove
                                             </a>
                                         </div>
-                                    </div>
+                                    </li>
                                 @endforeach
-                            </div>
+                            </ul>
                         </div>
+
+                        <!-- SortableJS CDN for Workflow Steps -->
+                        <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+                        <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            @if(auth()->user()->isAdmin())
+                            new Sortable(document.getElementById('workflow-steps-list'), {
+                                animation: 150,
+                                onEnd: function (evt) {
+                                    let order = Array.from(document.querySelectorAll('.workflow-step-item')).map(el => el.dataset.index);
+                                    fetch('{{ route('purchase-requests.workflow.reorder-steps', $purchaseRequest) }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                        },
+                                        body: JSON.stringify({order: order})
+                                    });
+                                }
+                            });
+                            @endif
+                        });
+                        </script>
 
                         <!-- Reset to Default -->
                         <div class="border-t border-white/20 pt-4">
@@ -160,6 +233,7 @@
                                class="bg-gray-500/20 hover:bg-gray-500/40 text-gray-200 hover:text-white px-4 py-2 rounded-lg text-sm transition inline-block">
                                 Reset to Default
                             </a>
+                        </div>
                         </div>
                     </div>
                 @endif
@@ -183,18 +257,30 @@
                                     <div class="absolute left-8 top-16 w-0.5 h-12 {{ $isPastStatus ? 'bg-green-400' : 'bg-gray-400/30' }}"></div>
                                 @endif
                                 
-                                <div class="glass-card rounded-xl p-6 {{ $isCurrentStatus ? 'ring-2 ring-orange-400/50 shadow-lg' : ($isPastStatus ? 'ring-1 ring-green-400/30' : 'ring-1 ring-gray-400/20') }}">
+                                <div class="glassmorphism-card rounded-xl p-6 {{ $isCurrentStatus ? 'ring-2 ring-orange-400/50 shadow-lg' : ($isPastStatus ? 'ring-1 ring-green-400/30' : 'ring-1 ring-gray-400/20') }}">
                                     <div class="flex items-start space-x-4">
                                         <!-- Step Indicator -->
                                         <div class="flex-shrink-0">
                                             <div class="relative">
                                                 @if($isPastStatus)
-                                                    <!-- Completed Step -->
-                                                    <div class="w-16 h-16 rounded-full bg-green-500/20 border-2 border-green-400 flex items-center justify-center">
-                                                        <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                        </svg>
-                                                    </div>
+                                                    @if($statusHistory && $statusHistory->is_skipped && $purchaseRequest->status === 'Completed')
+                                                        <!-- Auto-Completed Step -->
+                                                        <div class="w-16 h-16 rounded-full bg-yellow-500/20 border-2 border-yellow-400 flex items-center justify-center relative">
+                                                            <svg class="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
+                                                            </svg>
+                                                            <div class="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center">
+                                                                <span class="text-yellow-900 text-xs font-bold">A</span>
+                                                            </div>
+                                                        </div>
+                                                    @else
+                                                        <!-- Completed Step -->
+                                                        <div class="w-16 h-16 rounded-full bg-green-500/20 border-2 border-green-400 flex items-center justify-center">
+                                                            <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                            </svg>
+                                                        </div>
+                                                    @endif
                                                 @elseif($isCurrentStatus)
                                                     <!-- Current Step -->
                                                     <div class="w-16 h-16 rounded-full bg-orange-500/20 border-2 border-orange-400 flex items-center justify-center relative">
@@ -220,21 +306,58 @@
                                                         Step {{ $index + 1 }}: {{ $status }}
                                                     </h3>
                                                     @if($statusHistory)
-                                                        <p class="text-sm text-white/70 mt-1">
-                                                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                            </svg>
-                                                            Completed: {{ $statusHistory->created_at->format('M d, Y H:i') }}
-                                                        </p>
+                                                        <div class="text-sm text-white/70 mt-2 space-y-1">
+                                                            @if($statusHistory->started_at)
+                                                                <p class="flex items-center">
+                                                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                                    </svg>
+                                                                    Started: {{ $statusHistory->started_at->format('M d, Y H:i') }}
+                                                                </p>
+                                                            @endif
+                                                            @if($statusHistory->completed_at)
+                                                                <p class="flex items-center">
+                                                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                                    </svg>
+                                                                    Completed: {{ $statusHistory->completed_at->format('M d, Y H:i') }}
+                                                                </p>
+                                                            @endif
+                                                            @if($statusHistory->started_at && $statusHistory->completed_at)
+                                                                <p class="flex items-center text-green-300">
+                                                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                                                    </svg>
+                                                                    Duration: {{ $statusHistory->duration ?? $statusHistory->started_at->diffInHours($statusHistory->completed_at) }} hours
+                                                                </p>
+                                                            @endif
+                                                            @if($statusHistory && $statusHistory->is_skipped && $purchaseRequest->status === 'Completed')
+                                                                <p class="flex items-center text-yellow-300 text-xs">
+                                                                    <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                                    </svg>
+                                                                    Auto-completed when PR was finished
+                                                                </p>
+                                                            @endif
+                                                        </div>
                                                     @endif
                                                 </div>
                                                 
                                                 <!-- Status Badge -->
                                                 <div class="flex items-center space-x-2">
                                                     @if($isPastStatus)
-                                                        <span class="px-3 py-1 bg-green-500/20 text-green-200 rounded-full text-sm font-medium">
-                                                            Completed
-                                                        </span>
+                                                        @if($statusHistory && $statusHistory->is_skipped && $purchaseRequest->status === 'Completed')
+                                                            <span class="px-3 py-1 bg-yellow-500/20 text-yellow-200 rounded-full text-sm font-medium flex items-center">
+                                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
+                                                                </svg>
+                                                                Auto-Completed
+                                                            </span>
+                                                        @else
+                                                            <span class="px-3 py-1 bg-green-500/20 text-green-200 rounded-full text-sm font-medium">
+                                                                Completed
+                                                            </span>
+                                                        @endif
                                                     @elseif($isCurrentStatus)
                                                         <span class="px-3 py-1 bg-orange-500/20 text-orange-200 rounded-full text-sm font-medium animate-pulse">
                                                             In Progress
@@ -262,10 +385,10 @@
                                             
                                             <!-- Document Upload Section (Only for Current Step) -->
                                             @if($isCurrentStatus)
-                                                <div class="mt-6 p-4 glass-card rounded-lg border border-orange-400/30">
+                                                <div class="mt-6 p-4 glassmorphism-card rounded-lg border border-orange-400/30">
                                                     <!-- Workflow Actions -->
                                                     @if(auth()->user()->isAdmin())
-                                                        <div class="mb-6 p-4 glass-card rounded-lg border border-blue-400/30">
+                                                        <div class="mb-6 p-4 glassmorphism-card rounded-lg border border-blue-400/30">
                                                             <h4 class="text-sm font-medium text-white glass-heading mb-4 flex items-center">
                                                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
@@ -275,13 +398,30 @@
                                                             <div class="flex items-center space-x-4">
                                                                 <!-- Next Step Button -->
                                                                 @if($index < count($allStatuses) - 1)
-                                                                    <a href="{{ route('purchase-requests.workflow.next-step.confirm', [$purchaseRequest, $index]) }}" 
-                                                                       class="bg-green-500/20 hover:bg-green-500/40 text-green-200 hover:text-green-100 px-6 py-2 rounded-lg font-medium transition flex items-center">
-                                                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
-                                                                        </svg>
-                                                                        Next Step
-                                                                    </a>
+                                                                    @php
+                                                                        $pendingDocs = $purchaseRequest->getPendingDocumentsForStep($status);
+                                                                        $rejectedDocs = $purchaseRequest->getRejectedDocumentsForStep($status);
+                                                                        $canAdvance = $pendingDocs->count() === 0 && $rejectedDocs->count() === 0 && $purchaseRequest->areDocumentsApprovedForStep($status);
+                                                                    @endphp
+                                                                    
+                                                                    @if($canAdvance)
+                                                                        <a href="{{ route('purchase-requests.workflow.next-step.confirm', [$purchaseRequest, $index]) }}" 
+                                                                           class="bg-green-500/20 hover:bg-green-500/40 text-green-200 hover:text-green-100 px-6 py-2 rounded-lg font-medium transition flex items-center">
+                                                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                                                            </svg>
+                                                                            Next Step
+                                                                        </a>
+                                                                    @else
+                                                                        <button disabled 
+                                                                                class="bg-gray-500/20 text-gray-400 px-6 py-2 rounded-lg font-medium cursor-not-allowed flex items-center"
+                                                                                title="Cannot advance: Documents need approval">
+                                                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                                                            </svg>
+                                                                            Next Step
+                                                                        </button>
+                                                                    @endif
                                                                 @endif
                                                                 
                                                                 <!-- Skip Step Button -->
@@ -301,6 +441,30 @@
                                                                     @else
                                                                         <span class="ml-2 text-green-300">→ Final Step</span>
                                                                     @endif
+                                                                    @if($statusHistory && $statusHistory->started_at)
+                                                                        <div class="mt-1 text-xs text-white/60">
+                                                                            Started: {{ $statusHistory->started_at->format('M d, Y H:i') }}
+                                                                        </div>
+                                                                    @endif
+                                                                    
+                                                                    <!-- Document Approval Status -->
+                                                                    @if($pendingDocs->count() > 0)
+                                                                        <div class="mt-2 p-2 bg-yellow-500/20 border border-yellow-400/30 rounded text-xs text-yellow-200">
+                                                                            <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                                                            </svg>
+                                                                            {{ $pendingDocs->count() }} document(s) pending approval
+                                                                        </div>
+                                                                    @endif
+                                                                    
+                                                                    @if($rejectedDocs->count() > 0)
+                                                                        <div class="mt-2 p-2 bg-red-500/20 border border-red-400/30 rounded text-xs text-red-200">
+                                                                            <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                                            </svg>
+                                                                            {{ $rejectedDocs->count() }} document(s) rejected - re-upload required
+                                                                        </div>
+                                                                    @endif
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -316,7 +480,7 @@
                                                     <!-- Document List -->
                                                     <div class="space-y-3 mb-4">
                                                         @foreach($requiredDocuments as $doc)
-                                                            <div class="flex items-center justify-between p-3 glass-card rounded-lg">
+                                                            <div class="flex items-center justify-between p-3 glassmorphism-card rounded-lg">
                                                                 <span class="text-sm text-white glass-text">{{ $doc }}</span>
                                                                 @php
                                                                     $isUploaded = $uploadedDocuments->contains('original_filename', $doc);
@@ -368,15 +532,98 @@
                                                             </h5>
                                                             <ul class="space-y-2">
                                                                 @foreach($uploadedDocuments as $document)
-                                                                    <li class="flex items-center justify-between text-xs glass-card p-3 rounded-lg">
-                                                                        <span class="text-white glass-text">{{ $document->original_filename }}</span>
+                                                                    <li class="flex items-center justify-between text-xs glassmorphism-card p-3 rounded-lg">
+                                                                        <div class="flex items-center space-x-2">
+                                                                            <svg class="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $document->getFileTypeIcon() }}"></path>
+                                                                            </svg>
+                                                                            <span class="text-white glass-text">{{ $document->original_filename }}</span>
+                                                                        </div>
                                                                         <div class="flex items-center space-x-3">
                                                                             <span class="text-white/70">{{ $document->created_at->format('M d, Y H:i') }}</span>
-                                                                            <a href="{{ route('documents.download', $document) }}" 
-                                                                               class="text-blue-300 hover:text-blue-200 transition">
-                                                                                Download
-                                                                            </a>
+                                                                            
+                                                                            <!-- Approval Status Badge -->
+                                                                            <span class="px-2 py-1 text-xs rounded-full
+                                                                                @if($document->isApproved()) bg-green-500/20 text-green-300
+                                                                                @elseif($document->isRejected()) bg-red-500/20 text-red-300
+                                                                                @else bg-yellow-500/20 text-yellow-300 @endif">
+                                                                                @if($document->isApproved())
+                                                                                    <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                                                    </svg>
+                                                                                    Approved
+                                                                                @elseif($document->isRejected())
+                                                                                    <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                                                    </svg>
+                                                                                    Rejected
+                                                                                @else
+                                                                                    <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                                                    </svg>
+                                                                                    Pending
+                                                                                @endif
+                                                                            </span>
+                                                                            @if($document->path && $document->canBeViewedInBrowser())
+                                                                                <a href="{{ route('documents.view', $document) }}" 
+                                                                                   target="_blank"
+                                                                                   title="View {{ $document->getExtension() }} file in new tab"
+                                                                                   class="text-blue-300 hover:text-blue-200 transition flex items-center">
+                                                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                                                                    </svg>
+                                                                                    View
+                                                                                </a>
+                                                                            @elseif(!$document->path)
+                                                                                <span class="text-red-300 text-xs" title="File not found">
+                                                                                    <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                                                                    </svg>
+                                                                                    Missing
+                                                                                </span>
+                                                                            @endif
+                                                                            @if($document->path)
+                                                                                <a href="{{ route('documents.download', $document) }}" 
+                                                                                   class="text-blue-300 hover:text-blue-200 transition flex items-center">
+                                                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                                                    </svg>
+                                                                                    Download
+                                                                                </a>
+                                                                            @else
+                                                                                <span class="text-red-300 text-xs" title="File not found">
+                                                                                    <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                                                                    </svg>
+                                                                                    Missing
+                                                                                </span>
+                                                                            @endif
                                                                             @if(auth()->user()->isAdmin())
+                                                                                <!-- Approval Buttons -->
+                                                                                @if($document->isPending())
+                                                                                    <form action="{{ route('documents.approve', $document) }}" 
+                                                                                          method="POST" 
+                                                                                          class="inline">
+                                                                                        @csrf
+                                                                                        <button type="submit" 
+                                                                                                class="text-green-300 hover:text-green-200 transition mr-2">
+                                                                                            <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                                                            </svg>
+                                                                                            Approve
+                                                                                        </button>
+                                                                                    </form>
+                                                                                    
+                                                                                    <button type="button" 
+                                                                                            onclick="showRejectModal('{{ $document->id }}', '{{ $document->original_filename }}')"
+                                                                                            class="text-red-300 hover:text-red-200 transition mr-2">
+                                                                                        <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                                                        </svg>
+                                                                                        Reject
+                                                                                    </button>
+                                                                                @endif
+                                                                                
                                                                                 <form action="{{ route('documents.destroy', $document) }}" 
                                                                                       method="POST" 
                                                                                       class="inline">
@@ -407,7 +654,7 @@
                 @if($purchaseRequest->remarks)
                     <div class="mt-16">
                         <h3 class="text-lg font-medium text-white glass-heading mb-2">Remarks</h3>
-                        <div class="glass-card p-4 rounded-lg">
+                        <div class="glassmorphism-card p-4 rounded-lg">
                             <p class="text-white glass-text">{{ $purchaseRequest->remarks }}</p>
                         </div>
                     </div>
@@ -415,4 +662,53 @@
             </div>
         </div>
     </div>
+
+    <!-- Rejection Modal -->
+    <div id="rejectModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Reject Document</h3>
+            <p class="text-gray-600 mb-4">Please provide a reason for rejecting <span id="documentName" class="font-semibold"></span></p>
+            
+            <form id="rejectForm" method="POST">
+                @csrf
+                <div class="mb-4">
+                    <label for="rejection_reason" class="block text-sm font-medium text-gray-700 mb-2">Rejection Reason</label>
+                    <textarea id="rejection_reason" name="rejection_reason" rows="3" 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="Enter the reason for rejection..." required></textarea>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="hideRejectModal()" 
+                            class="px-4 py-2 text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300 transition">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">
+                        Reject Document
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function showRejectModal(documentId, documentName) {
+            document.getElementById('documentName').textContent = documentName;
+            document.getElementById('rejectForm').action = `/documents/${documentId}/reject`;
+            document.getElementById('rejectModal').classList.remove('hidden');
+        }
+
+        function hideRejectModal() {
+            document.getElementById('rejectModal').classList.add('hidden');
+            document.getElementById('rejection_reason').value = '';
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('rejectModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideRejectModal();
+            }
+        });
+    </script>
 </x-app-layout> 

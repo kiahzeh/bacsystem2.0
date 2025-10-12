@@ -25,17 +25,8 @@ class Consolidate extends Model
     {
         parent::boot();
 
-        static::creating(function ($model) {
-            // Ensure that the cpr_number is unique
-            do {
-                $lastCpr = self::orderBy('id', 'desc')->first();
-                $nextNumber = $lastCpr ? ((int) filter_var($lastCpr->cpr_number, FILTER_SANITIZE_NUMBER_INT)) + 1 : 1;
-                $newCprNumber = 'CPR-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
-            } while (self::where('cpr_number', $newCprNumber)->exists());  // Check for existing CPR number
-
-            // Assign the unique CPR number
-            $model->cpr_number = $newCprNumber;
-        });
+        // Removed auto-generation logic to allow manual CPR number input
+        // The cpr_number will now be set manually by the admin
     }
 }
 

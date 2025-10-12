@@ -38,7 +38,176 @@
                         </div>
                     @endif
 
-                    <div class="overflow-x-auto glass-effect rounded-lg overflow-y-auto relative">
+                    <!-- Search Bar -->
+                    <div class="mb-6" x-data="{ 
+                        search: '{{ request('search') }}',
+                        suggestions: [],
+                        showSuggestions: false,
+                        selectedIndex: -1,
+                        
+                        async fetchSuggestions() {
+                            if (this.search.length < 1) {
+                                this.suggestions = [];
+                                this.showSuggestions = false;
+                                return;
+                            }
+                            
+                            try {
+                                const response = await fetch(`/api/users/search?q=${encodeURIComponent(this.search)}`);
+                                const data = await response.json();
+                                this.suggestions = data.users || [];
+                                this.showSuggestions = this.suggestions.length > 0;
+                                this.selectedIndex = -1;
+                            } catch (error) {
+                                console.error('Error fetching suggestions:', error);
+                                this.suggestions = [];
+                                this.showSuggestions = false;
+                            }
+                        },
+                        
+                        selectSuggestion(user) {
+                            this.search = user.name;
+                            this.showSuggestions = false;
+                            this.submitSearch();
+                        },
+                        
+                        submitSearch() {
+                            const form = document.getElementById('searchForm');
+                            if (form) {
+                                form.submit();
+                            }
+                        },
+                        
+                        handleKeydown(event) {
+                            if (!this.showSuggestions) return;
+                            
+                            switch(event.key) {
+                                case 'ArrowDown':
+                                    event.preventDefault();
+                                    this.selectedIndex = Math.min(this.selectedIndex + 1, this.suggestions.length - 1);
+                                    break;
+                                case 'ArrowUp':
+                                    event.preventDefault();
+                                    this.selectedIndex = Math.max(this.selectedIndex - 1, -1);
+                                    break;
+                                case 'Enter':
+                                    event.preventDefault();
+                                    if (this.selectedIndex >= 0 && this.suggestions[this.selectedIndex]) {
+                                        this.selectSuggestion(this.suggestions[this.selectedIndex]);
+                                    } else {
+                                        this.submitSearch();
+                                    }
+                                    break;
+                                case 'Escape':
+                                    this.showSuggestions = false;
+                                    this.selectedIndex = -1;
+                                    break;
+                            }
+                        }
+                    }" x-init="$watch('search', value => fetchSuggestions())">
+                        <form method="GET" action="{{ route('users.index') }}" id="searchForm" class="flex items-center space-x-4">
+                            <div class="flex-1 relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    name="search" 
+                                    x-model="search"
+                                    @keydown="handleKeydown($event)"
+                                    @click.away="showSuggestions = false"
+                                    placeholder="Search users by name, email, username, department, or role..."
+                                    class="glassmorphism-input w-full pl-10 pr-4 py-3 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                                    value="{{ request('search') }}"
+                                    autocomplete="off"
+                                >
+                                
+                                <!-- Suggestions Dropdown -->
+                                <div x-show="showSuggestions" 
+                                     x-transition:enter="transition ease-out duration-200"
+                                     x-transition:enter-start="opacity-0 scale-95"
+                                     x-transition:enter-end="opacity-100 scale-100"
+                                     x-transition:leave="transition ease-in duration-150"
+                                     x-transition:leave-start="opacity-100 scale-100"
+                                     x-transition:leave-end="opacity-0 scale-95"
+                                     class="absolute z-50 w-full mt-1 bg-white/95 backdrop-blur-xl rounded-lg shadow-2xl border border-white/20 max-h-60 overflow-y-auto">
+                                    
+                                    <template x-for="(user, index) in suggestions" :key="user.id">
+                                        <div @click="selectSuggestion(user)"
+                                             @mouseenter="selectedIndex = index"
+                                             :class="{
+                                                 'bg-violet-500 text-white': selectedIndex === index,
+                                                 'hover:bg-violet-100 text-gray-800': selectedIndex !== index
+                                             }"
+                                             class="px-4 py-3 cursor-pointer transition-colors duration-150 flex items-center space-x-3">
+                                            
+                                            <!-- User Avatar -->
+                                            <div class="flex-shrink-0">
+                                                <div class="w-8 h-8 rounded-full bg-violet-500 flex items-center justify-center text-white font-medium text-sm">
+                                                    <span x-text="user.name.charAt(0).toUpperCase()"></span>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- User Info -->
+                                            <div class="flex-1 min-w-0">
+                                                <div class="font-medium" x-text="user.name"></div>
+                                                <div class="text-sm opacity-75" x-text="user.email"></div>
+                                                <div class="text-xs opacity-60" x-text="user.department_name || 'No Department'"></div>
+                                            </div>
+                                            
+                                            <!-- Role Badge -->
+                                            <div class="flex-shrink-0">
+                                                <span :class="{
+                                                    'bg-purple-100 text-purple-800': user.role === 'admin',
+                                                    'bg-blue-100 text-blue-800': user.role === 'user'
+                                                }" 
+                                                      class="px-2 py-1 text-xs rounded-full font-medium"
+                                                      x-text="user.role.charAt(0).toUpperCase() + user.role.slice(1)">
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    
+                                    <!-- No Results -->
+                                    <div x-show="suggestions.length === 0 && search.length > 0" 
+                                         class="px-4 py-3 text-gray-500 text-center">
+                                        No users found matching "<span x-text="search"></span>"
+                                    </div>
+                                </div>
+                            </div>
+                            <button 
+                                type="submit"
+                                class="bg-violet-500 hover:bg-violet-600 text-white px-6 py-3 rounded-md font-medium transition-colors duration-200 flex items-center"
+                            >
+                                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                                Search
+                            </button>
+                            @if(request('search'))
+                                <a 
+                                    href="{{ route('users.index') }}" 
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-md font-medium transition-colors duration-200 flex items-center"
+                                >
+                                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                    Clear
+                                </a>
+                            @endif
+                        </form>
+                        
+                        @if(request('search'))
+                            <div class="mt-3 text-sm text-white/70">
+                                <span class="font-medium">Search results for:</span> "{{ request('search') }}"
+                                <span class="ml-2">({{ $users->total() }} {{ Str::plural('user', $users->total()) }} found)</span>
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="overflow-x-auto glassmorphism-card rounded-lg overflow-y-auto relative">
                         <table class="min-w-full table-auto border-collapse">
                             <thead>
                                 <tr class="bg-gray-50/60 text-white uppercase text-sm leading-normal">
@@ -51,15 +220,30 @@
                             </thead>
                             <tbody class="text-white text-sm">
                                 @forelse($users as $user)
-                                    <tr class="border-b border-gray-200 hover:bg-gray-50/60 transition-all duration-150">
+                                    <tr class="border-b border-gray-200 hover:bg-white/10 transition-all duration-150">
                                         <td class="py-4 px-6">
                                             <div class="flex items-center">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-white"
-                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                </svg>
-                                                <span class="glass-table-text text-white">{{ $user->name }}</span>
+                                                @if($user->profile_picture && Storage::disk('public')->exists($user->profile_picture))
+                                                    <img src="{{ Storage::url($user->profile_picture) }}" 
+                                                         alt="Profile Picture" 
+                                                         class="h-8 w-8 rounded-full object-cover mr-2 border border-white/20"
+                                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-white hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                    </svg>
+                                                @else
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-white"
+                                                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                    </svg>
+                                                @endif
+                                                <div>
+                                                    <span class="glass-table-text text-white font-medium">{{ $user->name }}</span>
+                                                    @if($user->username)
+                                                        <div class="text-xs text-white/60">@{{ $user->username }}</div>
+                                                    @endif
+                                                </div>
                                             </div>
                                         </td>
                                         <td class="py-4 px-6">
@@ -123,14 +307,25 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="px-6 py-4 text-center text-black">
+                                        <td colspan="5" class="px-6 py-4 text-center text-white">
                                             <div class="flex flex-col items-center justify-center">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mb-4"
                                                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                         d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                                                 </svg>
-                                                <p class="text-lg">No users found.</p>
+                                                <p class="text-lg text-white">
+                                                    @if(request('search'))
+                                                        No users found matching "{{ request('search') }}".
+                                                    @else
+                                                        No users found.
+                                                    @endif
+                                                </p>
+                                                @if(request('search'))
+                                                    <a href="{{ route('users.index') }}" class="text-violet-300 hover:text-violet-100 mt-2">
+                                                        Clear search and show all users
+                                                    </a>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>

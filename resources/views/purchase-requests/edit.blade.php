@@ -38,17 +38,42 @@
                         </div>
 
                         <div>
-                            <x-input-label for="type" :value="__('Bid Type')" class="text-white" />
+                            <x-input-label for="mode_of_procurement" :value="__('Mode of Procurement')" class="text-white" />
                             <div class="flex items-center space-x-4">
-                                <select id="type" name="type"
+                                <select id="mode_of_procurement" name="mode_of_procurement"
                                     class="mt-1 block w-full glassmorphism-input"
                                     required>
-                                    <option value="">-- Select Type --</option>
-                                    <option value="alternative" {{ old('type', $purchaseRequest->type) == 'alternative' ? 'selected' : '' }}>Alternative</option>
-                                    <option value="competitive" {{ old('type', $purchaseRequest->type) == 'competitive' ? 'selected' : '' }}>Competitive</option>
+                                    <option value="">-- Select Mode of Procurement --</option>
+                                    <option value="Alternative" {{ old('mode_of_procurement', $purchaseRequest->mode_of_procurement) == 'Alternative' ? 'selected' : '' }}>Alternative</option>
+                                    <option value="Competitive" {{ old('mode_of_procurement', $purchaseRequest->mode_of_procurement) == 'Competitive' ? 'selected' : '' }}>Competitive</option>
                                 </select>
                             </div>
-                            <x-input-error class="mt-2" :messages="$errors->get('type')" />
+                            <x-input-error class="mt-2" :messages="$errors->get('mode_of_procurement')" />
+                        </div>
+
+                        <div x-data="{ category: '{{ old('category', $purchaseRequest->category) }}' }">
+                            <x-input-label for="category" :value="__('Category')" class="text-white" />
+                            <select id="category" name="category"
+                                x-model="category"
+                                class="mt-1 block w-full glassmorphism-input"
+                                required>
+                                <option value="">-- Select Category --</option>
+                                <option value="Goods" {{ old('category', $purchaseRequest->category) == 'Goods' ? 'selected' : '' }}>Goods</option>
+                                <option value="Infrastructure" {{ old('category', $purchaseRequest->category) == 'Infrastructure' ? 'selected' : '' }}>Infrastructure</option>
+                                <option value="Consulting Services" {{ old('category', $purchaseRequest->category) == 'Consulting Services' ? 'selected' : '' }}>Consulting Services</option>
+                                <option value="Non-Consulting Services" {{ old('category', $purchaseRequest->category) == 'Non-Consulting Services' ? 'selected' : '' }}>Non-Consulting Services</option>
+                                <option value="Others" {{ old('category', $purchaseRequest->category) == 'Others' ? 'selected' : '' }}>Others</option>
+                            </select>
+                            <x-input-error class="mt-2" :messages="$errors->get('category')" />
+
+                            <!-- Others input -->
+                            <div x-show="category === 'Others'" class="mt-4">
+                                <x-input-label for="custom_category" :value="__('Specify Other Category')" class="text-white" />
+                                <input type="text" id="custom_category" name="custom_category"
+                                    class="block mt-1 w-full glassmorphism-input"
+                                    value="{{ old('custom_category', $purchaseRequest->category) }}" />
+                                <x-input-error class="mt-2" :messages="$errors->get('custom_category')" />
+                            </div>
                         </div>
 
                         <div>
@@ -102,16 +127,7 @@
                     @if(auth()->user()->isAdmin())
                         <div class="mt-6 pt-6 border-t border-gray-300">
                             <h3 class="text-lg font-medium text-white mb-4">Quick Actions</h3>
-                            <form method="POST" action="{{ route('purchase-requests.convert-type', $purchaseRequest) }}" 
-                                  onsubmit="return confirm('Are you sure you want to convert this PR from {{ $purchaseRequest->type }} to {{ $purchaseRequest->type == 'alternative' ? 'competitive' : 'alternative' }}?');" 
-                                  class="inline">
-                                @csrf
-                                @method('PATCH')
-                                <button type="submit" 
-                                        class="glassmorphism-button-accent text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-200 ease-in-out transform hover:scale-105">
-                                    🔄 Convert to {{ $purchaseRequest->type == 'alternative' ? 'Competitive' : 'Alternative' }}
-                                </button>
-                            </form>
+                            <p class="text-gray-300 text-sm">Additional actions will be available here.</p>
                         </div>
                     @else
                         <div class="mt-6 pt-6 border-t border-gray-300">

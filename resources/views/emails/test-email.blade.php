@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Test Email from BAC System</title>
+    <title>Test Email from Procurement Monitoring System</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -38,7 +38,7 @@
 
 <body>
     <div class="header">
-        <h1 style="color: #0d6efd; margin: 0;">BAC System</h1>
+        <h1 style="color: #0d6efd; margin: 0;">Procurement Monitoring System</h1>
         <p style="margin: 5px 0 0;">Bids and Awards Committee</p>
     </div>
 
@@ -56,8 +56,8 @@
     </div>
 
     <div class="footer">
-        <p>This is an automated message from the BAC System. Please do not reply to this email.</p>
-        <p>© {{ date('Y') }} BAC System. All rights reserved.</p>
+        <p>This is an automated message from the Procurement Monitoring System. Please do not reply to this email.</p>
+        <p>© {{ date('Y') }} Procurement Monitoring System. All rights reserved.</p>
     </div>
 </body>
 

@@ -44,6 +44,7 @@ class PurchaseRequestSeeder extends Seeder
 
             for ($i = 1; $i <= 3; $i++) {
                 PurchaseRequest::create([
+                    'pr_number' => 'PR-' . $department->id . '-' . str_pad($i, 3, '0', STR_PAD_LEFT) . '-' . date('Y'),
                     'name' => $department->name . ' Purchase Request ' . $i,
                     'order_date' => now()->subDays(rand(1, 30)),
                     'department_id' => $department->id,

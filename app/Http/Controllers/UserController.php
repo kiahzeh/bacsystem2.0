@@ -16,9 +16,25 @@ class UserController extends Controller
         $this->middleware('admin');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with('department')->paginate(10);
+        $query = User::with('department');
+        
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('username', 'like', "%{$search}%")
+                  ->orWhere('role', 'like', "%{$search}%")
+                  ->orWhereHas('department', function($deptQuery) use ($search) {
+                      $deptQuery->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+        
+        $users = $query->paginate(10)->withQueryString();
         return view('users.index', compact('users'));
     }
 
@@ -85,5 +101,39 @@ class UserController extends Controller
 
         return redirect()->route('users.index')
             ->with('success', 'User deleted successfully.');
+    }
+
+    public function search(Request $request)
+    {
+        $query = $request->get('q', '');
+        
+        if (strlen($query) < 1) {
+            return response()->json(['users' => []]);
+        }
+        
+        $users = User::with('department')
+            ->where(function($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                  ->orWhere('email', 'like', "%{$query}%")
+                  ->orWhere('username', 'like', "%{$query}%")
+                  ->orWhere('role', 'like', "%{$query}%")
+                  ->orWhereHas('department', function($deptQuery) use ($query) {
+                      $deptQuery->where('name', 'like', "%{$query}%");
+                  });
+            })
+            ->limit(10)
+            ->get()
+            ->map(function($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'username' => $user->username,
+                    'role' => $user->role,
+                    'department_name' => $user->department ? $user->department->name : null,
+                ];
+            });
+        
+        return response()->json(['users' => $users]);
     }
 }

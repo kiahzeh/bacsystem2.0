@@ -30,20 +30,21 @@
                         </div>
                     @endif
 
-                    <div class="overflow-x-auto glass-effect rounded-lg overflow-y-auto relative">
+                    <div class="overflow-x-auto glassmorphism-card rounded-lg overflow-y-auto relative">
                         <table class="min-w-full table-auto border-collapse">
                             <thead>
                                 <tr class="bg-gray-50/60 text-white uppercase text-sm leading-normal">
                                     <th class="py-3 px-6 text-left font-semibold glass-table-heading">Name</th>
                                     <th class="py-3 px-6 text-left font-semibold glass-table-heading">Order Date</th>
                                     <th class="py-3 px-6 text-left font-semibold glass-table-heading">Department</th>
+                                    <th class="py-3 px-6 text-left font-semibold glass-table-heading">Mode of Procurement</th>
                                     <th class="py-3 px-6 text-left font-semibold glass-table-heading">Status</th>
                                     <th class="py-3 px-6 text-left font-semibold glass-table-heading">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="text-white text-sm">
                                 @forelse($purchaseRequests as $request)
-                                    <tr class="border-b border-gray-200 hover:bg-gray-50/60 transition-all duration-150">
+                                    <tr class="border-b border-gray-200 hover:bg-white/10 transition-all duration-150">
                                         <td class="py-4 px-6">
                                             <div class="flex items-center">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -67,6 +68,17 @@
                                                 </svg>
                                                 <span class="glass-table-text text-white">{{ $request->department->name }}</span>
                                             </div>
+                                        </td>
+                                        <td class="py-4 px-6">
+                                            @php
+                                                $mode = $request->mode_of_procurement;
+                                                $badgeClass = 'bg-gray-100 text-gray-800';
+                                                if ($mode === 'Alternative') $badgeClass = 'bg-blue-100 text-blue-800';
+                                                elseif ($mode === 'Competitive') $badgeClass = 'bg-green-100 text-green-800';
+                                            @endphp
+                                            <span class="px-3 py-1 rounded-full text-xs font-semibold {{ $badgeClass }}">
+                                                {{ $mode }}
+                                            </span>
                                         </td>
                                         <td class="py-4 px-6">
                                             <span class="px-3 py-1 rounded-full text-sm font-semibold bg-white text-gray-800 border-2

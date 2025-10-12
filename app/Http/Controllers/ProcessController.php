@@ -13,7 +13,7 @@ class ProcessController extends Controller
 
     public function index()
     {
-        $processes = Process::orderBy('order')->get();
+        $processes = Process::ordered()->get();
         return view('processes.index', compact('processes'));
     }
 
@@ -59,5 +59,14 @@ class ProcessController extends Controller
     {
         $process->delete();
         return redirect()->route('processes.index')->with('success', 'Process deleted successfully.');
+    }
+
+    public function reorder(Request $request)
+    {
+        $order = $request->input('order'); // array of process IDs in new order
+        foreach ($order as $index => $id) {
+            Process::where('id', $id)->update(['order' => $index]);
+        }
+        return response()->json(['status' => 'success']);
     }
 } 

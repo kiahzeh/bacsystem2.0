@@ -1,12 +1,23 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{ darkMode: localStorage.getItem('theme') === 'dark' }" x-init="
+    if (darkMode) { document.documentElement.classList.add('dark'); }
+    $watch('darkMode', value => {
+        if (value) {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+        }
+    })
+">
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'BAC') }}</title>
+    <title>{{ config('app.name', 'Procurement Monitoring') }}</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -28,19 +39,19 @@
         }
         
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(139, 92, 246, 0.5);
+            background: rgba(30, 58, 138, 0.5);
             border-radius: 3px;
             transition: background 0.2s ease;
         }
         
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(139, 92, 246, 0.7);
+            background: rgba(30, 58, 138, 0.7);
         }
         
         /* Firefox Scrollbar */
         .custom-scrollbar {
             scrollbar-width: thin;
-            scrollbar-color: rgba(139, 92, 246, 0.5) rgba(255, 255, 255, 0.1);
+            scrollbar-color: rgba(30, 58, 138, 0.5) rgba(255, 255, 255, 0.1);
         }
         
         /* Glassmorphism Dropdown Enhancement */
@@ -53,11 +64,16 @@
     </style>
 </head>
 
-<body class="font-sans antialiased">
-<div class="min-h-screen bg-fixed bg-cover bg-center bg-no-repeat overflow-hidden" style="background-image: linear-gradient(to bottom right, #8b5cf6, #a855f7, #7c3aed);">
-
+<body class="min-h-screen bg-gradient-to-br from-blue-800 via-blue-900 to-indigo-900 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 bg-fixed bg-cover bg-center bg-no-repeat">
 
         @include('layouts.navigation')
+
+        <!-- Global Back Button -->
+        <div class="mx-4 mt-16" style="position: relative; z-index: 9999;">
+            <button type="button" onclick="window.history.back();" class="px-4 py-2 rounded-lg shadow-lg font-semibold text-white glassmorphism-navy transition hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400" style="backdrop-filter: blur(16px); background: rgba(30, 58, 138, 0.7); border: 1px solid rgba(255,255,255,0.2);">
+                &#8592; Back
+            </button>
+        </div>
 
         <!-- Page Heading -->
         @if (isset($header))
@@ -67,8 +83,6 @@
                     
                 </div>
             </header>
-            <li>
-</li>
 
         @endif
 
@@ -76,7 +90,7 @@
         <main>
             {{ $slot }}
         </main>
-    </div>
+
 </body>
 
 </html>

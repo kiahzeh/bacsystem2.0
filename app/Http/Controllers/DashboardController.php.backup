@@ -75,13 +75,8 @@ class DashboardController extends Controller
         $consolidatedPRs = Consolidate::with('purchaseRequests')->get();
         
         // Get purchase requests for the user
-        $purchaseRequests = PurchaseRequest::when(!$user->isAdmin(), function($query) use ($user) {
-                $query->where(function($subQuery) use ($user) {
-                    $subQuery->where('user_id', $user->id)
-                             ->orWhere('department_id', $user->department_id);
-                });
-            })
-            ->when($search, fn($query) => $query->where('pr_number', 'like', "%$search%"))
+        $purchaseRequests = PurchaseRequest::where('user_id', $user->id)
+            ->orWhere('department_id', $user->department_id)
             ->latest()
             ->take(5)
             ->get();
@@ -168,6 +163,9 @@ class DashboardController extends Controller
         // Get selected PR numbers and CPR number
         $prNumbers = $request->input('pr_numbers');  // Array of selected PR IDs
         $cprNumber = $request->input('cpr_number');  // Manual CPR number input
+    {
+        // Get selected PR numbers
+        $prNumbers = $request->input('pr_numbers');  // Array of selected PR IDs
 
         if (empty($prNumbers)) {
             return back()->withErrors(['error' => 'Please select at least one PR number to consolidate.']);
@@ -175,8 +173,8 @@ class DashboardController extends Controller
 
         // Create a new CPR (Consolidated Purchase Request)
         $consolidate = new Consolidate();
-        $consolidate->cpr_number = $cprNumber; // Use manually provided CPR number
-        $consolidate->created_by = auth()->user()->id;
+        $consolidate->cpr_number = $request->input('cpr_number'); // Generate a unique CPR number (e.g., CPR-ABC123)
+        $consolidate->created_by = auth()->user()->id;  // Assume you're storing the creator's user ID
         $consolidate->save();
 
         // Store the selected PR numbers in a relationship or JSON
@@ -187,8 +185,10 @@ class DashboardController extends Controller
             }
         }
 
-        return redirect()->route('dashboard')->with('success', 'CPR created successfully with number: ' . $cprNumber);
+        // Optionally, you can store PR numbers in the CPR directly (as JSON or in a pivot table)
+        return redirect()->route('dashboard')->with('success', 'CPR created successfully.');
     }
+
     public function showConsolidated()
     {
         // Fetch all consolidated PRs along with their related Purchase Requests (PRs)

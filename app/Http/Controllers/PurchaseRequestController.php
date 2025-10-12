@@ -70,11 +70,16 @@ class PurchaseRequestController extends Controller
         ]);
     
         $validated = $request->validate([
+            'pr_number' => 'required|string|max:255|unique:purchase_requests,pr_number',
             'name' => 'required|string|max:255',
+            'project_title' => 'required|string|max:255',
             'order_date' => 'required|date',
             'department_id' => 'required|exists:departments,id',
             'status' => ['required', Rule::exists('processes', 'name')],
-            'type' => 'required|in:alternative,competitive', // ✅ Added type validation
+            'mode_of_procurement' => 'required|string|max:255',
+            'abc_approved_budget' => 'required|numeric|min:0',
+            'category' => 'required|string|max:255',
+            'purpose_description' => 'required|string',
             'remarks' => 'nullable|string',
             'funding' => 'required|string',
             'user_id' => 'required|exists:users,id',
@@ -85,19 +90,37 @@ class PurchaseRequestController extends Controller
             : $request->input('funding');
 
         $request->merge(['funding' => $funding]);
+
+        // Handle custom mode of procurement
+        $modeOfProcurement = $request->input('mode_of_procurement') === 'Others'
+            ? $request->input('custom_mode_of_procurement')
+            : $request->input('mode_of_procurement');
+
+        $request->merge(['mode_of_procurement' => $modeOfProcurement]);
+
+        // Handle custom category
+        $category = $request->input('category') === 'Others'
+            ? $request->input('custom_category')
+            : $request->input('category');
+
+        $request->merge(['category' => $category]);
     
+        // Remove pr_number auto-generation logic
         $purchaseRequest = PurchaseRequest::create($validated);
 
-        $lastPR = PurchaseRequest::latest('id')->first();
-        $nextNumber = $lastPR ? $lastPR->id + 1 : 1;
-        $prNumber = 'PR-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
-
-        $purchaseRequest->update(['pr_number' => $prNumber]);
+        // Remove $purchaseRequest->update(['pr_number' => $prNumber]);
         
         // Initialize workflow steps for new purchase request
         $defaultSteps = $purchaseRequest->getDefaultWorkflowSteps();
         $purchaseRequest->workflow_steps = $defaultSteps;
         $purchaseRequest->save();
+        
+        // Mark initial status as started with timestamp
+        $purchaseRequest->statusHistory()->create([
+            'status' => $purchaseRequest->status,
+            'user_id' => auth()->id(),
+            'started_at' => now(),
+        ]);
     
         // Notify ALL users (except the creator) when a new PR is created
         $allUsers = User::where('id', '!=', auth()->id())->get();
@@ -140,8 +163,24 @@ class PurchaseRequestController extends Controller
             'order_date' => 'required|date',
             'department_id' => 'nullable|exists:departments,id',
             'status' => ['nullable', Rule::exists('processes', 'name')],
+            'mode_of_procurement' => 'required|string|max:255',
+            'category' => 'required|string|max:255',
             'remarks' => 'nullable|string',
         ]);
+
+        // Handle custom mode of procurement
+        $modeOfProcurement = $request->input('mode_of_procurement') === 'Others'
+            ? $request->input('custom_mode_of_procurement')
+            : $request->input('mode_of_procurement');
+
+        $validated['mode_of_procurement'] = $modeOfProcurement;
+
+        // Handle custom category
+        $category = $request->input('category') === 'Others'
+            ? $request->input('custom_category')
+            : $request->input('category');
+
+        $validated['category'] = $category;
 
         // If user is not an admin, force their department_id
         if (!auth()->user()->isAdmin()) {
@@ -163,6 +202,29 @@ class PurchaseRequestController extends Controller
         $purchaseRequest->last_modified_by = auth()->id();
         $purchaseRequest->last_modified_at = now();
         $purchaseRequest->save();
+
+        // Handle status change timestamps
+        if ($oldStatus !== $purchaseRequest->status) {
+            // Mark old status as completed
+            if ($oldStatus) {
+                $purchaseRequest->statusHistory()->updateOrCreate(
+                    ['status' => $oldStatus],
+                    [
+                        'user_id' => auth()->id(),
+                        'completed_at' => now(),
+                    ]
+                );
+            }
+            
+            // Mark new status as started
+            $purchaseRequest->statusHistory()->updateOrCreate(
+                ['status' => $purchaseRequest->status],
+                [
+                    'user_id' => auth()->id(),
+                    'started_at' => now(),
+                ]
+            );
+        }
 
         // Notify ALL users (except the creator) when PR is updated
         $allUsers = User::where('id', '!=', auth()->id())->get();
@@ -451,16 +513,20 @@ class PurchaseRequestController extends Controller
         if (isset($steps[$stepIndex])) {
             $stepName = $steps[$stepIndex];
             
-            // Mark as skipped in status history
+            // Mark as skipped in status history with timestamps
             $history = $purchaseRequest->statusHistory()->where('status', $stepName)->first();
             if ($history) {
                 $history->is_skipped = true;
+                $history->started_at = $history->started_at ?? now();
+                $history->completed_at = now();
                 $history->save();
             } else {
                 $purchaseRequest->statusHistory()->create([
                     'status' => $stepName,
                     'is_skipped' => true,
                     'user_id' => auth()->id(),
+                    'started_at' => now(),
+                    'completed_at' => now(),
                 ]);
             }
             
@@ -480,6 +546,14 @@ class PurchaseRequestController extends Controller
         $this->authorize('update', $purchaseRequest);
         
         $steps = $purchaseRequest->workflow_steps ?? [];
+        
+        // Ensure workflow_steps is properly initialized
+        if (empty($steps)) {
+            $steps = $purchaseRequest->getDefaultWorkflowSteps();
+            $purchaseRequest->workflow_steps = $steps;
+            $purchaseRequest->save();
+        }
+        
         if (!isset($steps[$stepIndex]) || $stepIndex >= count($steps) - 1) {
             return back()->with('error', 'Cannot advance to next step.');
         }
@@ -487,12 +561,48 @@ class PurchaseRequestController extends Controller
         $currentStep = $steps[$stepIndex];
         $nextStep = $steps[$stepIndex + 1];
         
-        // Mark current step as completed
+        // Check if all required documents for current step are approved
+        $requiredDocuments = $purchaseRequest->getRequiredDocuments($currentStep);
+        $uploadedDocuments = $purchaseRequest->documents()->where('status', $currentStep)->get();
+        
+        if ($requiredDocuments->count() > 0) {
+            $pendingDocuments = $uploadedDocuments->where('approval_status', 'pending');
+            $rejectedDocuments = $uploadedDocuments->where('approval_status', 'rejected');
+            
+            if ($pendingDocuments->count() > 0) {
+                return back()->with('error', 'Cannot advance to next step. Some documents are still pending approval.');
+            }
+            
+            if ($rejectedDocuments->count() > 0) {
+                return back()->with('error', 'Cannot advance to next step. Some documents have been rejected and need to be re-uploaded.');
+            }
+            
+            // Check if all required documents are uploaded and approved
+            foreach ($requiredDocuments as $requiredDoc) {
+                $uploadedDoc = $uploadedDocuments->where('original_filename', $requiredDoc)->first();
+                if (!$uploadedDoc || !$uploadedDoc->isApproved()) {
+                    return back()->with('error', "Cannot advance to next step. Required document '{$requiredDoc}' is not uploaded or not approved.");
+                }
+            }
+        }
+        
+        // Mark current step as completed with timestamp
         $purchaseRequest->statusHistory()->updateOrCreate(
             ['status' => $currentStep],
             [
                 'user_id' => auth()->id(),
                 'is_skipped' => false,
+                'completed_at' => now(),
+            ]
+        );
+        
+        // Mark next step as started with timestamp
+        $purchaseRequest->statusHistory()->updateOrCreate(
+            ['status' => $nextStep],
+            [
+                'user_id' => auth()->id(),
+                'is_skipped' => false,
+                'started_at' => now(),
             ]
         );
         
@@ -529,24 +639,142 @@ class PurchaseRequestController extends Controller
         return back()->with('success', 'Workflow reset to default steps successfully.');
     }
 
-    public function convertType(PurchaseRequest $purchaseRequest)
+    public function reorderWorkflowSteps(Request $request, PurchaseRequest $purchaseRequest)
     {
-        $oldType = $purchaseRequest->type;
-        $newType = $oldType === 'alternative' ? 'competitive' : 'alternative';
-        
-        $purchaseRequest->type = $newType;
-        $purchaseRequest->last_modified_by = auth()->id();
-        $purchaseRequest->last_modified_at = now();
-        $purchaseRequest->save();
-        
-        // Notify ALL users (except the creator) when type is changed
-        $allUsers = User::where('id', '!=', auth()->id())->get();
-        foreach ($allUsers as $user) {
-            $user->notify(new PurchaseRequestUpdated($purchaseRequest, $oldType, 'type_changed'));
-        }
-        
-        return redirect()->route('purchase-requests.edit', $purchaseRequest)
-            ->with('success', "Purchase Request type successfully converted from {$oldType} to {$newType}.");
+        $this->authorize('update', $purchaseRequest);
+
+        $request->validate([
+            'steps' => 'required|array',
+            'steps.*' => 'required|string'
+        ]);
+
+        $purchaseRequest->update([
+            'workflow_steps' => $request->steps
+        ]);
+
+        return response()->json(['success' => true]);
     }
 
+    /**
+     * Export purchase request as PDF
+     */
+    public function export(PurchaseRequest $purchaseRequest)
+    {
+        $this->authorize('view', $purchaseRequest);
+
+        // Load the relationship
+        $purchaseRequest->load('department');
+
+        // Generate PDF using the export template
+        $pdf = \PDF::loadView('purchase-requests.export', compact('purchaseRequest'));
+        
+        // Set paper size and orientation
+        $pdf->setPaper('A4', 'portrait');
+        
+        // Generate filename
+        $filename = 'PR-' . $purchaseRequest->pr_number . '-' . date('Y-m-d') . '.pdf';
+        
+        // Return PDF for download
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Show completion form
+     */
+    public function showCompleteForm(PurchaseRequest $purchaseRequest)
+    {
+        $this->authorize('update', $purchaseRequest);
+        return view('purchase-requests.complete', compact('purchaseRequest'));
+    }
+
+    /**
+     * Complete purchase request
+     */
+    public function complete(Request $request, PurchaseRequest $purchaseRequest)
+    {
+        $this->authorize('update', $purchaseRequest);
+
+        $validated = $request->validate([
+            'completion_date' => 'required|date',
+            'final_amount' => 'required|numeric|min:0',
+            'awarded_vendor' => 'required|string|max:255',
+            'contract_number' => 'nullable|string|max:255',
+            'completion_notes' => 'nullable|string',
+        ]);
+
+        $oldStatus = $purchaseRequest->status;
+        
+        $purchaseRequest->update([
+            'status' => 'Completed',
+            'completion_date' => $validated['completion_date'],
+            'final_amount' => $validated['final_amount'],
+            'awarded_vendor' => $validated['awarded_vendor'],
+            'contract_number' => $validated['contract_number'],
+            'completion_notes' => $validated['completion_notes'],
+            'last_modified_by' => auth()->id(),
+            'last_modified_at' => now(),
+        ]);
+
+        // Mark all remaining workflow steps as completed
+        if ($oldStatus !== 'Completed') {
+            // Mark old status as completed
+            if ($oldStatus) {
+                $purchaseRequest->statusHistory()->updateOrCreate(
+                    ['status' => $oldStatus],
+                    [
+                        'user_id' => auth()->id(),
+                        'completed_at' => now(),
+                    ]
+                );
+            }
+            
+            // Get all workflow steps
+            $workflowSteps = $purchaseRequest->workflow_steps ?? $purchaseRequest->getDefaultWorkflowSteps();
+            
+            // Mark all remaining steps as completed
+            foreach ($workflowSteps as $step) {
+                // Skip the 'Completed' status itself
+                if ($step === 'Completed') {
+                    continue;
+                }
+                // Skip if it's the current status (already handled above)
+                if ($step === $oldStatus) {
+                    continue;
+                }
+                
+                // Check if this step already has a status history
+                $existingHistory = $purchaseRequest->statusHistory()->where('status', $step)->first();
+                
+                if (!$existingHistory) {
+                    // Create new status history for unprocessed steps
+                    $purchaseRequest->statusHistory()->create([
+                        'status' => $step,
+                        'user_id' => auth()->id(),
+                        'started_at' => now(),
+                        'completed_at' => now(),
+                        'is_skipped' => true, // Mark as skipped since it wasn't actually processed
+                    ]);
+                } else if (!$existingHistory->completed_at) {
+                    // Update existing history to mark as completed
+                    $existingHistory->update([
+                        'completed_at' => now(),
+                        'is_skipped' => true, // Mark as skipped since it wasn't actually processed
+                    ]);
+                }
+            }
+            
+            // Mark completion status as started and completed
+            $purchaseRequest->statusHistory()->updateOrCreate(
+                ['status' => 'Completed'],
+                [
+                    'user_id' => auth()->id(),
+                    'started_at' => now(),
+                    'completed_at' => now(),
+                ]
+            );
+        }
+
+        return redirect()->route('purchase-requests.show', $purchaseRequest)
+            ->with('success', 'Purchase request completed successfully.');
+    }
 }

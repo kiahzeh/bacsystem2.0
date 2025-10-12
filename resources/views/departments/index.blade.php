@@ -38,7 +38,7 @@
                         </div>
                     @endif
 
-                    <div class="overflow-x-auto glass-effect rounded-lg overflow-y-auto relative">
+                    <div class="overflow-x-auto glassmorphism-card rounded-lg overflow-y-auto relative">
                         <table class="min-w-full table-auto border-collapse">
                             <thead>
                                 <tr class="bg-gray-50/60 text-white uppercase text-sm leading-normal">
@@ -50,7 +50,7 @@
                             </thead>
                             <tbody class="text-white text-sm">
                                 @forelse($departments as $department)
-                                    <tr class="border-b border-gray-200 hover:bg-gray-50/60 transition-all duration-150">
+                                    <tr class="border-b border-gray-200 hover:bg-white/10 transition-all duration-150">
                                         <td class="py-4 px-6">
                                             <div class="flex items-center">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-white"

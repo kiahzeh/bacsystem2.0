@@ -11,23 +11,34 @@ class PurchaseRequest extends Model
     use HasFactory;
 
     protected $fillable = [
+        'pr_number',
         'name',
+        'project_title',
         'order_date',
         'department_id',
         'status',
-        'remarks',
-        'type', 
-        'user_id', 
+        'mode_of_procurement',
+        'abc_approved_budget',
+        'category',
+        'purpose_description',
         'funding',
+        'remarks',
+        'user_id', 
         'workflow_steps',
         'current_step_index',
         'is_workflow_customized',
         'last_modified_by',
         'last_modified_at',
+        'completion_date',
+        'final_amount',
+        'awarded_vendor',
+        'contract_number',
+        'completion_notes',
     ];
 
     protected $casts = [
         'order_date' => 'date',
+        'completion_date' => 'date',
         'enabled_steps' => 'array',
         'workflow_steps' => 'array',
         'is_workflow_customized' => 'boolean'
@@ -67,12 +78,10 @@ class PurchaseRequest extends Model
         parent::boot();
 
         static::creating(function ($request) {
-            $lastId = self::max('id');
-            $request->pr_number = 'PR-' . str_pad($lastId + 1, 5, '0', STR_PAD_LEFT);
-            
-            // Initialize default workflow steps if not customized
+            // pr_number will be set from the form, do not auto-generate
+            // Keep workflow_steps initialization if needed
             if (!$request->workflow_steps) {
-                $request->workflow_steps = array_keys($request->getDefaultWorkflowSteps());
+                $request->workflow_steps = $request->getDefaultWorkflowSteps();
             }
         });
     }
@@ -93,7 +102,8 @@ class PurchaseRequest extends Model
             'Contract',
             'Notice to Proceed',
             'Posting of Award in PhilGEPS',
-            'Forward Purchase or Supply'
+            'Forward Purchase or Supply',
+            'Completed'
         ];
     }
 
@@ -186,6 +196,51 @@ class PurchaseRequest extends Model
         return $this->hasMany(Document::class);
     }
 
+    /**
+     * Check if all required documents for a step are approved
+     */
+    public function areDocumentsApprovedForStep($step)
+    {
+        $requiredDocuments = $this->getRequiredDocuments($step);
+        $uploadedDocuments = $this->documents()->where('status', $step)->get();
+        
+        if (empty($requiredDocuments)) {
+            return true; // No documents required for this step
+        }
+        
+        // Check if all required documents are uploaded and approved
+        foreach ($requiredDocuments as $requiredDoc) {
+            $uploadedDoc = $uploadedDocuments->where('original_filename', $requiredDoc)->first();
+            if (!$uploadedDoc || !$uploadedDoc->isApproved()) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * Get documents that need approval for a step
+     */
+    public function getPendingDocumentsForStep($step)
+    {
+        return $this->documents()
+            ->where('status', $step)
+            ->where('approval_status', 'pending')
+            ->get();
+    }
+
+    /**
+     * Get rejected documents for a step
+     */
+    public function getRejectedDocumentsForStep($step)
+    {
+        return $this->documents()
+            ->where('status', $step)
+            ->where('approval_status', 'rejected')
+            ->get();
+    }
+
     public function getRequiredDocuments($status)
     {
         $requiredDocuments = [
@@ -249,7 +304,7 @@ class PurchaseRequest extends Model
             ]
         ];
 
-        return $requiredDocuments[$status] ?? [];
+        return collect($requiredDocuments[$status] ?? []);
     }
 
     /**

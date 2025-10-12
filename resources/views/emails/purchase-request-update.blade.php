@@ -25,8 +25,8 @@ View Purchase Request
 
 ---
 
-This is an automated message from the BAC System. Please do not reply to this email.
+This is an automated message from the Procurement Monitoring System. Please do not reply to this email.
 
-Thanks,<br>
-BAC System
+Best regards,<br>
+Procurement Monitoring System
 </x-mail::message>

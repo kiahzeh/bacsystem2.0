@@ -40,6 +40,7 @@ class ProfileTest extends TestCase
 
         $this->assertSame('Test User', $user->name);
         $this->assertSame('test@example.com', $user->email);
+        // When email is changed, it should be unverified
         $this->assertNull($user->email_verified_at);
     }
 

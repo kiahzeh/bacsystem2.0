@@ -1,0 +1,1 @@
+        $othersBids = PurchaseRequest::where("mode_of_procurement", "Others")->when($search, fn($query) => $query->where("pr_number", "like", "%$search%"))->get();

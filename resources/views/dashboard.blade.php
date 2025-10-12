@@ -86,8 +86,6 @@
         }
     </style>
 
-    <div class="min-h-screen bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 overflow-hidden">
-
     @if(auth()->user()->isAdmin())
         <!-- ADMIN DASHBOARD -->
         <div class="py-6">
@@ -101,7 +99,7 @@
 
                 <!-- Admin Overview Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div class="glass-card rounded-lg p-6 border-l-4 border-blue-500">
+                    <div class="glassmorphism-card rounded-lg p-6 border-l-4 border-blue-500">
                         <div class="flex items-center">
                             <div class="p-2 bg-blue-100 rounded-lg">
                                 <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -115,7 +113,7 @@
                         </div>
                     </div>
 
-                    <div class="glass-card rounded-lg p-6 border-l-4 border-green-500">
+                    <div class="glassmorphism-card rounded-lg p-6 border-l-4 border-green-500">
                         <div class="flex items-center">
                             <div class="p-2 bg-green-100 rounded-lg">
                                 <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -129,7 +127,7 @@
                         </div>
                     </div>
 
-                    <div class="glass-card rounded-lg p-6 border-l-4 border-yellow-500">
+                    <div class="glassmorphism-card rounded-lg p-6 border-l-4 border-yellow-500">
                         <div class="flex items-center">
                             <div class="p-2 bg-yellow-100 rounded-lg">
                                 <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,7 +141,7 @@
                         </div>
                     </div>
 
-                    <div class="glass-card rounded-lg p-6 border-l-4 border-purple-500">
+                    <div class="glassmorphism-card rounded-lg p-6 border-l-4 border-purple-500">
                         <div class="flex items-center">
                             <div class="p-2 bg-purple-100 rounded-lg">
                                 <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -216,7 +214,7 @@
                     
                     <!-- Purchase Requests Overview -->
                     <div class="lg:col-span-2">
-                        <div class="glass-card rounded-lg">
+                        <div class="glassmorphism-card rounded-lg">
                             <div class="p-6 border-b border-gray-200">
                                 <div class="flex items-center justify-between">
                                     <h2 class="text-xl font-bold text-white glass-heading">Purchase Requests Overview</h2>
@@ -237,7 +235,7 @@
                                     @if ($alternativeBids->count())
                                         <div class="space-y-3">
                                             @foreach ($alternativeBids as $bid)
-                                                <div class="border border-gray-300 rounded-lg p-4 hover:bg-gray-50 transition glass-card">
+                                                <div class="border border-gray-300 rounded-lg p-4 hover:bg-white/10 transition glassmorphism-card">
                                                     <div class="flex items-center justify-between">
                                                         <div class="flex-1">
                                                             <div class="flex items-center space-x-3">
@@ -269,14 +267,52 @@
                                 </div>
 
                                 <!-- Competitive Bids Section -->
-                                <div class="mb-6">
+                                <div class="mb-6" x-data="{ selectAll: false, searchTerm: '' }">
                                     <h3 class="text-lg font-bold mb-4 text-white glass-heading">Competitive Bids</h3>
+                                    
                                     @if ($competitiveBids->count())
+                                        <!-- Search Bar for Competitive Bids -->
+                                        <div class="mb-4">
+                                            <div class="relative">
+                                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                    <svg class="h-5 w-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                                    </svg>
+                                                </div>
+                                                <input 
+                                                    type="text" 
+                                                    x-model="searchTerm"
+                                                    placeholder="Search competitive bids by PR number, name, status, or funding..."
+                                                    class="glassmorphism-input w-full pl-10 pr-4 py-3 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                                                >
+                                            </div>
+                                        </div>
+                                        
                                         <form action="{{ route('consolidation.store') }}" method="POST">
                                             @csrf
+                                            <!-- Select All Option -->
+                                            <div class="mb-4 p-3 bg-white/10 rounded-lg border border-white/20">
+                                                <label class="flex items-center space-x-3 cursor-pointer">
+                                                    <input type="checkbox" 
+                                                           x-model="selectAll"
+                                                           @change="
+                                                               const checkboxes = document.querySelectorAll('input[name=\'pr_numbers[]\']:not([style*=\'display: none\'])');
+                                                               checkboxes.forEach(cb => cb.checked = selectAll);
+                                                           "
+                                                           class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                                    <span class="text-white font-semibold">Select All Competitive Bids</span>
+                                                    <span class="text-white/70 text-sm">(<span x-text="document.querySelectorAll('input[name=\'pr_numbers[]\']:not([style*=\'display: none\'])').length"></span> items)</span>
+                                                </label>
+                                            </div>
+                                            
                                             <div class="space-y-3">
                                                 @foreach ($competitiveBids as $bid)
-                                                    <div class="border border-gray-300 rounded-lg p-4 hover:bg-gray-50 transition glass-card">
+                                                    <div class="border border-gray-300 rounded-lg p-4 hover:bg-white/10 transition glassmorphism-card"
+                                                         x-show="searchTerm === '' || 
+                                                                 '{{ strtolower($bid->pr_number) }}'.includes(searchTerm.toLowerCase()) ||
+                                                                 '{{ strtolower($bid->name) }}'.includes(searchTerm.toLowerCase()) ||
+                                                                 '{{ strtolower($bid->status) }}'.includes(searchTerm.toLowerCase()) ||
+                                                                 '{{ strtolower($bid->funding ?? '') }}'.includes(searchTerm.toLowerCase())">
                                                         <div class="flex items-center justify-between">
                                                             <div class="flex-1">
                                                                 <div class="flex items-center space-x-3">
@@ -293,7 +329,15 @@
                                                                 </div>
                                                             </div>
                                                             <div class="flex items-center space-x-2">
-                                                                <input type="checkbox" name="pr_numbers[]" value="{{ $bid->id }}" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                                                <input type="checkbox" 
+                                                                       name="pr_numbers[]" 
+                                                                       value="{{ $bid->id }}" 
+                                                                       @change="
+                                                                           const checkboxes = document.querySelectorAll('input[name=\'pr_numbers[]\']:not([style*=\'display: none\'])');
+                                                                           const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+                                                                           selectAll = checkedCount === checkboxes.length;
+                                                                       "
+                                                                       class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                                                                 <a href="{{ route('purchase-requests.show', $bid) }}" class="text-blue-300 hover:text-blue-100">
                                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -305,8 +349,35 @@
                                                     </div>
                                                 @endforeach
                                             </div>
+                                            
+                                            <!-- No Results Message -->
+                                            <div x-show="searchTerm !== '' && document.querySelectorAll('input[name=\'pr_numbers[]\']:not([style*=\'display: none\'])').length === 0" 
+                                                 class="text-center py-8">
+                                                <svg class="mx-auto h-12 w-12 text-white/40 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                                </svg>
+                                                <p class="text-white/60 text-lg">No competitive bids found matching "<span x-text="searchTerm"></span>"</p>
+                                                <button type="button" @click="searchTerm = ''" class="text-violet-300 hover:text-violet-100 mt-2">
+                                                    Clear search
+                                                </button>
+                                            </div>
+                                            
                                             <div class="mt-4">
-                                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                                <div class="mb-4">
+                                                    <label for="cpr_number" class="block text-sm font-medium text-white mb-2">
+                                                        CPR Number (Consolidated Purchase Request Number)
+                                                    </label>
+                                                    <input type="text" 
+                                                           id="cpr_number" 
+                                                           name="cpr_number" 
+                                                           class="w-full px-3 py-2 glassmorphism-input text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                           placeholder="Enter CPR number (e.g., CPR-2024-001)"
+                                                           required>
+                                                    @error('cpr_number')
+                                                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                                    @enderror
+                                                </div>
+                                                <button type="submit" class="glassmorphism-button bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                                                     Consolidate Selected
                                                 </button>
                                             </div>
@@ -316,13 +387,97 @@
                                     @endif
                                 </div>
 
+                                <!-- Others Bids Section -->
+                                <div class="mb-6">
+                                    <h3 class="text-lg font-bold mb-4 text-white glass-heading">Others</h3>
+                                    @if (isset($othersBids) && $othersBids->count())
+                                        <div class="space-y-3">
+                                            @foreach ($othersBids as $bid)
+                                                <div class="border border-gray-300 rounded-lg p-4 hover:bg-white/10 transition glassmorphism-card">
+                                                    <div class="flex items-center justify-between">
+                                                        <div class="flex-1">
+                                                            <div class="flex items-center space-x-3">
+                                                                <h4 class="font-semibold text-white glass-text">{{ $bid->pr_number }}</h4>
+                                                                <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
+                                                                    Others
+                                                                </span>
+                                                            </div>
+                                                            <p class="text-white glass-text mt-1">{{ $bid->name }}</p>
+                                                            <div class="flex items-center space-x-4 mt-2 text-sm text-white glass-text">
+                                                                <span>Status: {{ $bid->status }}</span>
+                                                                <span>Order Date: {{ $bid->order_date }}</span>
+                                                                <span>Funding: {{ $bid->funding ?? 'N/A' }}</span>
+                                                            </div>
+                                                        </div>
+                                                        <a href="{{ route('purchase-requests.show', $bid) }}" class="text-blue-300 hover:text-blue-100">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                            </svg>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <p class="text-white glass-text">No others purchase requests found.</p>
+                                    @endif
+                                </div>
+
+                                <!-- Completed PRs Section -->
+                                <div class="mb-6">
+                                    <h3 class="text-lg font-bold mb-4 text-white glass-heading">Completed PRs</h3>
+                                    @if (isset($completedPRs) && $completedPRs->count())
+                                        <div class="space-y-3">
+                                            @foreach ($completedPRs as $pr)
+                                                <div class="border border-gray-300 rounded-lg p-4 hover:bg-white/10 transition glassmorphism-card">
+                                                    <div class="flex items-center justify-between">
+                                                        <div class="flex-1">
+                                                            <div class="flex items-center space-x-3">
+                                                                <h4 class="font-semibold text-white glass-text">{{ $pr->pr_number }}</h4>
+                                                                <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                                                                    Completed
+                                                                </span>
+                                                            </div>
+                                                            <p class="text-white glass-text mt-1">{{ $pr->name }}</p>
+                                                            <div class="flex items-center space-x-4 mt-2 text-sm text-white glass-text">
+                                                                <span>Completed: 
+                                                                    @if($pr->completion_date)
+                                                                        @if($pr->completion_date instanceof \Carbon\Carbon)
+                                                                            {{ $pr->completion_date->format('M d, Y') }}
+                                                                        @else
+                                                                            {{ $pr->completion_date }}
+                                                                        @endif
+                                                                    @else
+                                                                        N/A
+                                                                    @endif
+                                                                </span>
+                                                                <span>Final Amount: ₱{{ number_format($pr->final_amount ?? 0, 2) }}</span>
+                                                                <span>Vendor: {{ $pr->awarded_vendor ?? 'N/A' }}</span>
+                                                            </div>
+                                                        </div>
+                                                        <a href="{{ route('purchase-requests.show', $pr) }}" class="text-green-300 hover:text-green-100">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                            </svg>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <p class="text-white glass-text">No completed purchase requests found.</p>
+                                    @endif
+                                </div>
+
                                 <!-- Consolidated PRs Section -->
                                 <div>
                                     <h3 class="text-lg font-bold mb-4 text-white glass-heading">Consolidated PRs</h3>
                                     @if($consolidatedPRs->count() > 0)
                                         <div class="space-y-3">
                                             @foreach ($consolidatedPRs as $cpr)
-                                                <div class="border border-gray-300 rounded-lg p-4 hover:bg-gray-50 transition glass-card">
+                                                <div class="border border-gray-300 rounded-lg p-4 hover:bg-white/10 transition glassmorphism-card">
                                                     <div class="flex items-center justify-between">
                                                         <div class="flex-1">
                                                             <h4 class="font-semibold text-white glass-text">{{ $cpr->cpr_number }}</h4>
@@ -349,7 +504,7 @@
                     <div class="space-y-6">
                         
                         <!-- Quick Actions -->
-                        <div class="glass-card rounded-lg">
+                        <div class="glassmorphism-card rounded-lg">
                             <div class="p-6 border-b border-gray-300">
                                 <h3 class="text-lg font-bold text-white glass-heading">Quick Actions</h3>
                             </div>
@@ -378,7 +533,7 @@
                         </div>
 
                         <!-- Recent Notifications -->
-                        <div class="glass-card rounded-lg">
+                        <div class="glassmorphism-card rounded-lg">
                             <div class="p-6 border-b border-white/20 bg-gradient-to-r from-violet-500/10 to-purple-500/10 rounded-t-lg">
                                 <div class="flex items-center space-x-3">
                                     <svg class="w-5 h-5 text-violet-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -443,7 +598,7 @@
                         </div>
 
                         <!-- System Stats -->
-                        <div class="glass-card rounded-lg">
+                        <div class="glassmorphism-card rounded-lg">
                             <div class="p-6 border-b border-gray-300">
                                 <h3 class="text-lg font-bold text-white glass-heading">System Overview</h3>
                             </div>
@@ -488,7 +643,7 @@
 
                 <!-- Personal Overview Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div class="glass-card rounded-lg p-6 border-l-4 border-blue-500">
+                    <div class="glassmorphism-card rounded-lg p-6 border-l-4 border-blue-500">
                         <div class="flex items-center">
                             <div class="p-2 bg-blue-100 rounded-lg">
                                 <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -502,7 +657,7 @@
                         </div>
                     </div>
 
-                    <div class="glass-card rounded-lg p-6 border-l-4 border-yellow-500">
+                    <div class="glassmorphism-card rounded-lg p-6 border-l-4 border-yellow-500">
                         <div class="flex items-center">
                             <div class="p-2 bg-yellow-100 rounded-lg">
                                 <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -516,7 +671,7 @@
                         </div>
                     </div>
 
-                    <div class="glass-card rounded-lg p-6 border-l-4 border-green-500">
+                    <div class="glassmorphism-card rounded-lg p-6 border-l-4 border-green-500">
                         <div class="flex items-center">
                             <div class="p-2 bg-green-100 rounded-lg">
                                 <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -530,7 +685,7 @@
                         </div>
                     </div>
 
-                    <div class="glass-card rounded-lg p-6 border-l-4 border-purple-500">
+                    <div class="glassmorphism-card rounded-lg p-6 border-l-4 border-purple-500">
                         <div class="flex items-center">
                             <div class="p-2 bg-purple-100 rounded-lg">
                                 <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -550,7 +705,7 @@
                     
                     <!-- My Purchase Requests -->
                     <div class="lg:col-span-2">
-                        <div class="glass-card rounded-lg">
+                        <div class="glassmorphism-card rounded-lg">
                             <div class="p-6 border-b border-gray-300">
                                 <div class="flex items-center justify-between">
                                     <h2 class="text-xl font-bold text-white glass-heading">My Purchase Requests</h2>
@@ -560,18 +715,29 @@
                                 </div>
                             </div>
                             <div class="p-6">
-                                @if($purchaseRequests->count() > 0)
+                                <!-- Debug Info (remove in production) -->
+                                @if(config('app.debug'))
+                                    <div class="mb-4 p-3 bg-yellow-500/20 border border-yellow-400/30 rounded text-xs text-yellow-200">
+                                        <strong>Debug:</strong> Found {{ $purchaseRequests ? $purchaseRequests->count() : 0 }} purchase requests
+                                        @if(auth()->user())
+                                            | User ID: {{ auth()->id() }} | Dept: {{ auth()->user()->department_id }} | Admin: {{ auth()->user()->isAdmin() ? 'Yes' : 'No' }}
+                                        @endif
+                                    </div>
+                                @endif
+                                
+                                @if($purchaseRequests && $purchaseRequests->count() > 0)
                                     <div class="space-y-4">
                                         @foreach($purchaseRequests as $pr)
-                                            <div class="glass-effect rounded-lg p-4 hover:bg-gray-50/50 transition">
+                                            <div class="glassmorphism-card rounded-lg p-4 hover:bg-white/10 transition">
                                                 <div class="flex items-center justify-between">
                                                     <div class="flex-1">
                                                         <div class="flex items-center space-x-3">
                                                             <h3 class="font-semibold text-white glass-text">{{ $pr->pr_number }}</h3>
                                                             <span class="px-2 py-1 text-xs rounded-full
-                                                                @if($pr->type == 'alternative') bg-blue-100 text-blue-800
-                                                                @else bg-green-100 text-green-800 @endif">
-                                                                {{ ucfirst($pr->type) }}
+                                                                @if($pr->mode_of_procurement == 'Alternative') bg-blue-100 text-blue-800
+                                                                @elseif($pr->mode_of_procurement == 'Competitive') bg-green-100 text-green-800
+                                                                @else bg-gray-100 text-gray-800 @endif">
+                                                                {{ $pr->mode_of_procurement }}
                                                             </span>
                                                         </div>
                                                         <p class="text-white glass-text mt-1">{{ $pr->name }}</p>
@@ -624,7 +790,7 @@
                     <div class="space-y-6">
                         
                         <!-- Quick Actions -->
-                        <div class="glass-card rounded-lg">
+                        <div class="glassmorphism-card rounded-lg">
                             <div class="p-6 border-b border-gray-300">
                                 <h3 class="text-lg font-bold text-white glass-heading">Quick Actions</h3>
                             </div>
@@ -653,7 +819,7 @@
                         </div>
 
                         <!-- Department Info -->
-                        <div class="glass-card rounded-lg">
+                        <div class="glassmorphism-card rounded-lg">
                             <div class="p-6 border-b border-gray-300">
                                 <h3 class="text-lg font-bold text-white glass-heading">Department Info</h3>
                             </div>
@@ -690,7 +856,7 @@
                         </div>
 
                         <!-- Recent Activity -->
-                        <div class="glass-card rounded-lg">
+                        <div class="glassmorphism-card rounded-lg">
                             <div class="p-6 border-b border-gray-300">
                                 <h3 class="text-lg font-bold text-white glass-heading">Recent Activity</h3>
                             </div>
@@ -721,9 +887,5 @@
             </div>
         </div>
     @endif
-
-    </div>
-
-
 
 </x-app-layout>

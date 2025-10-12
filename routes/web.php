@@ -7,6 +7,7 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\NotificationTestController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Models\PurchaseRequest;
@@ -43,7 +44,7 @@ Route::get('/consolidation', [ConsolidateController::class, 'index'])->name('con
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
-    Route::get('/monthly-report', [ReportController::class, 'generateMonthlyReport'])->name('reports.monthly');
+    Route::get('/monthly-report', [App\Http\Controllers\ReportController::class, 'generateMonthlyReport'])->name('reports.monthly');
     Route::get('/consolidation', [DashboardController::class, 'showConsolidated'])->name('consolidation.index');
     Route::post('/consolidation/store', [DashboardController::class, 'store'])->name('consolidation.store');
 
@@ -55,6 +56,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::resource('purchase-requests', PurchaseRequestController::class);
     Route::get('purchase-requests/{purchaseRequest}/timeline', [PurchaseRequestController::class, 'timeline'])->name('purchase-requests.timeline');
+    Route::get('purchase-requests/{purchaseRequest}/export', [PurchaseRequestController::class, 'export'])->name('purchase-requests.export');
+    Route::get('purchase-requests/{purchaseRequest}/complete', [PurchaseRequestController::class, 'showCompleteForm'])->name('purchase-requests.complete');
+    Route::post('purchase-requests/{purchaseRequest}/complete', [PurchaseRequestController::class, 'complete'])->name('purchase-requests.complete.store');
     
     // Notifications Routes
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -78,8 +82,16 @@ Route::middleware('auth')->group(function () {
         ->name('purchase-requests.update-steps');
     Route::get('/documents/{document}/download', [DocumentController::class, 'download'])
         ->name('documents.download');
+    Route::get('/documents/{document}/view', [DocumentController::class, 'view'])
+        ->name('documents.view');
     Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])
         ->name('documents.destroy')
+        ->middleware('admin');
+    Route::post('/documents/{document}/approve', [DocumentController::class, 'approve'])
+        ->name('documents.approve')
+        ->middleware('admin');
+    Route::post('/documents/{document}/reject', [DocumentController::class, 'reject'])
+        ->name('documents.reject')
         ->middleware('admin');
 
     // Purchase Request routes
@@ -97,17 +109,17 @@ Route::middleware('auth')->group(function () {
     Route::patch('/purchase-requests/{purchaseRequest}/workflow/next-step/{stepIndex}', [PurchaseRequestController::class, 'nextWorkflowStep'])->name('purchase-requests.workflow.next-step');
     Route::patch('/purchase-requests/{purchaseRequest}/workflow/reset-to-default', [PurchaseRequestController::class, 'resetWorkflowToDefault'])->name('purchase-requests.workflow.reset-to-default');
 
-    // Purchase Request type conversion
-    Route::patch('/purchase-requests/{purchaseRequest}/convert-type', [PurchaseRequestController::class, 'convertType'])->name('purchase-requests.convert-type');
-
     // Delete confirmation route
     Route::get('/purchase-requests/{purchaseRequest}/delete-confirm', [PurchaseRequestController::class, 'deleteConfirm'])->name('purchase-requests.delete-confirm');
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('processes', App\Http\Controllers\ProcessController::class);
+    Route::post('/processes/reorder', [App\Http\Controllers\ProcessController::class, 'reorder'])->name('processes.reorder');
     Route::get('/reports/monthly/export', [App\Http\Controllers\ReportController::class, 'exportMonthlyPurchaseRequests'])->name('reports.monthly.export');
 });
+
+Route::post('/purchase-requests/{purchaseRequest}/workflow/reorder-steps', [App\Http\Controllers\PurchaseRequestController::class, 'reorderWorkflowSteps'])->name('purchase-requests.workflow.reorder-steps');
 
 Route::get('/search/pr', [App\Http\Controllers\PurchaseRequestController::class, 'ajaxSearch'])->name('search.pr');
 
@@ -173,5 +185,8 @@ Route::get('/debug-notifications', function () {
         }),
     ]);
 })->name('debug.notifications');
+
+// User search API
+Route::get('/api/users/search', [App\Http\Controllers\UserController::class, 'search'])->name('api.users.search');
 
 require __DIR__ . '/auth.php';
