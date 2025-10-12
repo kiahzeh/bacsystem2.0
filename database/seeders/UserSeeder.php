@@ -18,24 +18,28 @@ class UserSeeder extends Seeder
     $departments = Department::pluck('id')->toArray();
 
     for ($i = 1; $i <= 10; $i++) {
-        User::create([
-            'name' => 'User ' . $i,
-            'email' => 'user' . $i . '@example.com',
-            'password' => Hash::make('password'),
-            'department_id' => $departments[array_rand($departments)],
-        ]);
+        User::updateOrCreate(
+            ['email' => 'user' . $i . '@example.com'],
+            [
+                'name' => 'User ' . $i,
+                'password' => Hash::make('password'),
+                'department_id' => $departments[array_rand($departments)],
+            ]
+        );
     }
 
     $namedDepartments = Department::where('name', '!=', 'Admin')->get();
 
     foreach ($namedDepartments as $department) {
-        User::create([
-            'name' => $department->name . ' User',
-            'email' => strtolower($department->name) . '@example.com',
-            'password' => Hash::make('password'),
-            'department_id' => $department->id,
-            'role' => 'user',
-        ]);
+        User::updateOrCreate(
+            ['email' => strtolower($department->name) . '@example.com'],
+            [
+                'name' => $department->name . ' User',
+                'password' => Hash::make('password'),
+                'department_id' => $department->id,
+                'role' => 'user',
+            ]
+        );
     }
 
     // ✅ Admin user
