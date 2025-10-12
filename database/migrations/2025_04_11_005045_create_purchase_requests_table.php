@@ -19,7 +19,7 @@ return new class extends Migration {
             $table->text('remarks')->nullable();
             $table->foreignId('user_id')->constrained(); // Reference to the user who created the request
             $table->string('pr_number'); // Original PR number
-            $table->foreignId('consolidated_request_id')->nullable()->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('consolidated_request_id')->nullable();
             $table->timestamps();
 
                
