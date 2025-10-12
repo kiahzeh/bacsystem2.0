@@ -18,11 +18,17 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
+# Copy composer files first
+COPY composer.json composer.lock ./
+
+# Install dependencies
+RUN composer install --no-dev --optimize-autoloader --no-scripts
+
 # Copy application files
 COPY . .
 
-# Install dependencies
-RUN composer install --no-dev --optimize-autoloader
+# Run composer scripts
+RUN composer run-script post-autoload-dump
 
 # Create necessary directories
 RUN mkdir -p storage/framework/{cache,sessions,views} bootstrap/cache
