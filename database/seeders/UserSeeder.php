@@ -39,14 +39,16 @@ class UserSeeder extends Seeder
     }
 
     // ✅ Admin user
-    User::create([
-        'name' => 'Admin User',
-        'email' => 'admin@example.com',
-        'password' => Hash::make('password'),
-        'department_id' => $namedDepartments->random()->id ?? $departments[0],
-        'role' => 'admin',
-        'email_verified_at' => now(),
-    ]);
+    User::updateOrCreate(
+        ['email' => 'admin@example.com'],
+        [
+            'name' => 'Admin User',
+            'password' => Hash::make('password'),
+            'department_id' => $namedDepartments->random()->id ?? $departments[0],
+            'role' => 'admin',
+            'email_verified_at' => now(),
+        ]
+    );
 }
 
 }

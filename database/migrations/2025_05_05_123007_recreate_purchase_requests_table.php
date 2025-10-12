@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -11,7 +12,12 @@ return new class extends Migration
      */
     public function up()
     {
-        // Drop the existing table if it exists (for SQLite workaround)
+        // Drop foreign key constraints using raw SQL
+        DB::statement('ALTER TABLE documents DROP CONSTRAINT IF EXISTS documents_purchase_request_id_foreign');
+        DB::statement('ALTER TABLE consolidate_purchase_request DROP CONSTRAINT IF EXISTS consolidate_purchase_request_purchase_request_id_foreign');
+        DB::statement('ALTER TABLE purchase_requests DROP CONSTRAINT IF EXISTS purchase_requests_consolidated_request_id_foreign');
+
+        // Drop the existing table if it exists
         Schema::dropIfExists('purchase_requests');
 
         // Recreate the table with the new schema (including foreign keys and other necessary columns)
@@ -25,6 +31,15 @@ return new class extends Migration
             $table->string('remarks')->nullable();  // Optional remarks field
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');  // Foreign key for user
             $table->timestamps();  // Timestamps for created_at and updated_at
+        });
+        
+        // Recreate foreign key constraints
+        Schema::table('documents', function (Blueprint $table) {
+            $table->foreign('purchase_request_id')->references('id')->on('purchase_requests')->onDelete('cascade');
+        });
+        
+        Schema::table('consolidate_purchase_request', function (Blueprint $table) {
+            $table->foreign('purchase_request_id')->references('id')->on('purchase_requests')->onDelete('cascade');
         });
     }
 
