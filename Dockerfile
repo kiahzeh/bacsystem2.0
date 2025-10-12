@@ -35,6 +35,10 @@ RUN chmod -R 755 /var/www/html
 RUN echo '#!/bin/bash' > /usr/local/bin/start.sh && \
     echo 'cd /var/www/html' >> /usr/local/bin/start.sh && \
     echo 'echo "Starting Laravel application..."' >> /usr/local/bin/start.sh && \
+    echo 'echo "Setting up Laravel..."' >> /usr/local/bin/start.sh && \
+    echo 'php artisan config:cache || echo "Config cache failed"' >> /usr/local/bin/start.sh && \
+    echo 'php artisan route:cache || echo "Route cache failed"' >> /usr/local/bin/start.sh && \
+    echo 'php artisan view:cache || echo "View cache failed"' >> /usr/local/bin/start.sh && \
     echo 'echo "Running migrations..."' >> /usr/local/bin/start.sh && \
     echo 'php artisan migrate --force || echo "Migration failed, continuing..."' >> /usr/local/bin/start.sh && \
     echo 'echo "Running seeders..."' >> /usr/local/bin/start.sh && \
