@@ -55,6 +55,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('role')->default('user');
+            $table->boolean('is_admin')->default(false);
             $table->foreignId('department_id')->constrained()->onDelete('cascade');
             $table->rememberToken();
             $table->timestamps();
@@ -113,6 +114,17 @@ return new class extends Migration
             $table->foreignId('uploaded_by')->constrained('users')->onDelete('cascade');
             $table->boolean('is_approved')->default(false);
             $table->timestamp('approved_at')->nullable();
+            $table->timestamps();
+        });
+
+        // Create consolidates table
+        Schema::create('consolidates', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->text('description')->nullable();
+            $table->string('status')->default('pending');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->json('pr_numbers')->nullable();
             $table->timestamps();
         });
 
