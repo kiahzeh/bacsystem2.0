@@ -34,8 +34,12 @@ RUN chmod -R 755 /var/www/html
 # Create a startup script to run migrations
 RUN echo '#!/bin/bash' > /usr/local/bin/start.sh && \
     echo 'cd /var/www/html' >> /usr/local/bin/start.sh && \
-    echo 'php artisan migrate --force' >> /usr/local/bin/start.sh && \
-    echo 'php artisan db:seed --force' >> /usr/local/bin/start.sh && \
+    echo 'echo "Starting Laravel application..."' >> /usr/local/bin/start.sh && \
+    echo 'echo "Running migrations..."' >> /usr/local/bin/start.sh && \
+    echo 'php artisan migrate --force || echo "Migration failed, continuing..."' >> /usr/local/bin/start.sh && \
+    echo 'echo "Running seeders..."' >> /usr/local/bin/start.sh && \
+    echo 'php artisan db:seed --force || echo "Seeding failed, continuing..."' >> /usr/local/bin/start.sh && \
+    echo 'echo "Starting Apache..."' >> /usr/local/bin/start.sh && \
     echo 'apache2-foreground' >> /usr/local/bin/start.sh && \
     chmod +x /usr/local/bin/start.sh
 
