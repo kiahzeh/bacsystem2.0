@@ -31,6 +31,14 @@ RUN mkdir -p storage/framework/{cache,sessions,views} bootstrap/cache
 RUN chown -R www-data:www-data /var/www/html
 RUN chmod -R 755 /var/www/html
 
+# Create a startup script to run migrations
+RUN echo '#!/bin/bash' > /usr/local/bin/start.sh && \
+    echo 'cd /var/www/html' >> /usr/local/bin/start.sh && \
+    echo 'php artisan migrate --force' >> /usr/local/bin/start.sh && \
+    echo 'php artisan db:seed --force' >> /usr/local/bin/start.sh && \
+    echo 'apache2-foreground' >> /usr/local/bin/start.sh && \
+    chmod +x /usr/local/bin/start.sh
+
 # Configure Apache to serve from public directory
 RUN a2enmod rewrite
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
@@ -42,5 +50,5 @@ COPY .htaccess /var/www/html/public/.htaccess
 # Expose port
 EXPOSE 8080
 
-# Start Apache
-CMD ["apache2-foreground"]
+# Start with migrations
+CMD ["/usr/local/bin/start.sh"]
