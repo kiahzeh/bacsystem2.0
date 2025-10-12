@@ -35,9 +35,9 @@ RUN chmod -R 755 /var/www/html
 RUN echo '#!/bin/bash' > /usr/local/bin/start.sh && \
     echo 'cd /var/www/html' >> /usr/local/bin/start.sh && \
     echo 'echo "Starting Laravel application..."' >> /usr/local/bin/start.sh && \
-    echo 'echo "Running migrations..."' >> /usr/local/bin/start.sh && \
-    echo 'php artisan migrate --force' >> /usr/local/bin/start.sh && \
-    echo 'echo "Migrations completed. Running seeders..."' >> /usr/local/bin/start.sh && \
+    echo 'echo "Running fresh migration..."' >> /usr/local/bin/start.sh && \
+    echo 'php artisan migrate --path=database/migrations/2025_10_12_150000_fresh_start_migration.php --force' >> /usr/local/bin/start.sh && \
+    echo 'echo "Fresh migration completed. Running seeders..."' >> /usr/local/bin/start.sh && \
     echo 'php artisan db:seed --force' >> /usr/local/bin/start.sh && \
     echo 'echo "Seeders completed. Starting Apache..."' >> /usr/local/bin/start.sh && \
     echo 'exec apache2-foreground' >> /usr/local/bin/start.sh && \
