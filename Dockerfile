@@ -28,38 +28,36 @@ RUN composer install --no-dev --optimize-autoloader
 RUN mkdir -p storage/framework/{cache,sessions,views} bootstrap/cache database
 
 # Create .env file
-RUN cat > .env << 'EOF'
-APP_NAME="BAC Purchase Request System"
-APP_ENV=production
-APP_KEY=
-APP_DEBUG=false
-APP_URL=https://your-app.up.railway.app
-
-LOG_CHANNEL=stderr
-LOG_LEVEL=error
-
-DB_CONNECTION=sqlite
-DB_DATABASE=/app/database/database.sqlite
-
-BROADCAST_DRIVER=log
-CACHE_DRIVER=file
-FILESYSTEM_DISK=local
-QUEUE_CONNECTION=sync
-SESSION_DRIVER=file
-SESSION_LIFETIME=120
-SESSION_SECURE_COOKIE=false
-SESSION_HTTP_ONLY=true
-SESSION_SAME_SITE=lax
-
-MAIL_MAILER=log
-MAIL_HOST=mailpit
-MAIL_PORT=1025
-MAIL_USERNAME=null
-MAIL_PASSWORD=null
-MAIL_ENCRYPTION=null
-MAIL_FROM_ADDRESS=hello@example.com
-MAIL_FROM_NAME="BAC Purchase System"
-EOF
+RUN echo 'APP_NAME="BAC Purchase Request System"' > .env && \
+    echo 'APP_ENV=production' >> .env && \
+    echo 'APP_KEY=' >> .env && \
+    echo 'APP_DEBUG=false' >> .env && \
+    echo 'APP_URL=https://your-app.up.railway.app' >> .env && \
+    echo '' >> .env && \
+    echo 'LOG_CHANNEL=stderr' >> .env && \
+    echo 'LOG_LEVEL=error' >> .env && \
+    echo '' >> .env && \
+    echo 'DB_CONNECTION=sqlite' >> .env && \
+    echo 'DB_DATABASE=/app/database/database.sqlite' >> .env && \
+    echo '' >> .env && \
+    echo 'BROADCAST_DRIVER=log' >> .env && \
+    echo 'CACHE_DRIVER=file' >> .env && \
+    echo 'FILESYSTEM_DISK=local' >> .env && \
+    echo 'QUEUE_CONNECTION=sync' >> .env && \
+    echo 'SESSION_DRIVER=file' >> .env && \
+    echo 'SESSION_LIFETIME=120' >> .env && \
+    echo 'SESSION_SECURE_COOKIE=false' >> .env && \
+    echo 'SESSION_HTTP_ONLY=true' >> .env && \
+    echo 'SESSION_SAME_SITE=lax' >> .env && \
+    echo '' >> .env && \
+    echo 'MAIL_MAILER=log' >> .env && \
+    echo 'MAIL_HOST=mailpit' >> .env && \
+    echo 'MAIL_PORT=1025' >> .env && \
+    echo 'MAIL_USERNAME=null' >> .env && \
+    echo 'MAIL_PASSWORD=null' >> .env && \
+    echo 'MAIL_ENCRYPTION=null' >> .env && \
+    echo 'MAIL_FROM_ADDRESS=hello@example.com' >> .env && \
+    echo 'MAIL_FROM_NAME="BAC Purchase System"' >> .env
 
 # Create database file
 RUN touch database/database.sqlite && chmod 666 database/database.sqlite
