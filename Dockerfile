@@ -31,9 +31,13 @@ RUN mkdir -p storage/framework/{cache,sessions,views} bootstrap/cache
 RUN chown -R www-data:www-data /var/www/html
 RUN chmod -R 755 /var/www/html
 
-# Configure Apache
+# Configure Apache to serve from public directory
 RUN a2enmod rewrite
-COPY .htaccess /var/www/html/.htaccess
+RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
+RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/apache2.conf
+
+# Copy .htaccess to public directory
+COPY .htaccess /var/www/html/public/.htaccess
 
 # Expose port
 EXPOSE 8080
