@@ -12,10 +12,24 @@ return new class extends Migration
      */
     public function up()
     {
-        // Drop foreign key constraints using raw SQL
-        DB::statement('ALTER TABLE documents DROP CONSTRAINT IF EXISTS documents_purchase_request_id_foreign');
-        DB::statement('ALTER TABLE consolidate_purchase_request DROP CONSTRAINT IF EXISTS consolidate_purchase_request_purchase_request_id_foreign');
-        DB::statement('ALTER TABLE purchase_requests DROP CONSTRAINT IF EXISTS purchase_requests_consolidated_request_id_foreign');
+        // Drop foreign key constraints using raw SQL with error handling
+        try {
+            DB::statement('ALTER TABLE documents DROP CONSTRAINT IF EXISTS documents_purchase_request_id_foreign');
+        } catch (\Exception $e) {
+            // Table might not exist, continue
+        }
+        
+        try {
+            DB::statement('ALTER TABLE consolidate_purchase_request DROP CONSTRAINT IF EXISTS consolidate_purchase_request_purchase_request_id_foreign');
+        } catch (\Exception $e) {
+            // Table might not exist, continue
+        }
+        
+        try {
+            DB::statement('ALTER TABLE purchase_requests DROP CONSTRAINT IF EXISTS purchase_requests_consolidated_request_id_foreign');
+        } catch (\Exception $e) {
+            // Table might not exist, continue
+        }
 
         // Drop the existing table if it exists
         Schema::dropIfExists('purchase_requests');
@@ -34,13 +48,18 @@ return new class extends Migration
         });
         
         // Recreate foreign key constraints
-        Schema::table('documents', function (Blueprint $table) {
-            $table->foreign('purchase_request_id')->references('id')->on('purchase_requests')->onDelete('cascade');
-        });
+        if (Schema::hasTable('documents')) {
+            Schema::table('documents', function (Blueprint $table) {
+                $table->foreign('purchase_request_id')->references('id')->on('purchase_requests')->onDelete('cascade');
+            });
+        }
         
-        Schema::table('consolidate_purchase_request', function (Blueprint $table) {
-            $table->foreign('purchase_request_id')->references('id')->on('purchase_requests')->onDelete('cascade');
-        });
+        // Only recreate constraint if table exists
+        if (Schema::hasTable('consolidate_purchase_request')) {
+            Schema::table('consolidate_purchase_request', function (Blueprint $table) {
+                $table->foreign('purchase_request_id')->references('id')->on('purchase_requests')->onDelete('cascade');
+            });
+        }
     }
 
     public function down()

@@ -41,7 +41,15 @@ class DepartmentSeeder extends Seeder
         ];
 
         foreach ($departments as $department) {
-            Department::create($department);
+            try {
+                Department::updateOrCreate(
+                    ['name' => $department['name']],
+                    $department
+                );
+            } catch (\Exception $e) {
+                // Department might already exist, continue
+                echo "Department {$department['name']} already exists, skipping...\n";
+            }
         }
     }
 
