@@ -1,10 +1,5 @@
 {
   "version": 2,
-  "functions": {
-    "public/index.php": {
-      "runtime": "php@8.1"
-    }
-  },
   "routes": [
     {
       "src": "/(.*)",
