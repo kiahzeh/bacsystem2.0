@@ -88,7 +88,18 @@ class DocumentController extends Controller
     public function destroy(Document $document)
     {
         // Check if user has permission to delete
-        if (!auth()->user()->isAdmin()) {
+        $user = auth()->user();
+        $isAdmin = false;
+        if ($user) {
+            if (isset($user->role) && $user->role === 'admin') {
+                $isAdmin = true;
+            } elseif (isset($user->is_admin) && ((int) $user->is_admin === 1 || $user->is_admin === true)) {
+                $isAdmin = true;
+            } elseif (method_exists($user, 'isAdmin')) {
+                try { $isAdmin = (bool) $user->isAdmin(); } catch (\Throwable $e) { $isAdmin = false; }
+            }
+        }
+        if (!$isAdmin) {
             abort(403);
         }
 
@@ -106,7 +117,18 @@ class DocumentController extends Controller
     public function approve(Document $document)
     {
         // Check if user has permission to approve
-        if (!auth()->user()->isAdmin()) {
+        $user = auth()->user();
+        $isAdmin = false;
+        if ($user) {
+            if (isset($user->role) && $user->role === 'admin') {
+                $isAdmin = true;
+            } elseif (isset($user->is_admin) && ((int) $user->is_admin === 1 || $user->is_admin === true)) {
+                $isAdmin = true;
+            } elseif (method_exists($user, 'isAdmin')) {
+                try { $isAdmin = (bool) $user->isAdmin(); } catch (\Throwable $e) { $isAdmin = false; }
+            }
+        }
+        if (!$isAdmin) {
             abort(403);
         }
 
@@ -118,7 +140,18 @@ class DocumentController extends Controller
     public function reject(Request $request, Document $document)
     {
         // Check if user has permission to reject
-        if (!auth()->user()->isAdmin()) {
+        $user = auth()->user();
+        $isAdmin = false;
+        if ($user) {
+            if (isset($user->role) && $user->role === 'admin') {
+                $isAdmin = true;
+            } elseif (isset($user->is_admin) && ((int) $user->is_admin === 1 || $user->is_admin === true)) {
+                $isAdmin = true;
+            } elseif (method_exists($user, 'isAdmin')) {
+                try { $isAdmin = (bool) $user->isAdmin(); } catch (\Throwable $e) { $isAdmin = false; }
+            }
+        }
+        if (!$isAdmin) {
             abort(403);
         }
 
