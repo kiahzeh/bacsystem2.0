@@ -4,6 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\App;
 
 return new class extends Migration
 {
@@ -12,30 +13,33 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Drop all tables in correct order to avoid foreign key issues
-        $tables = [
-            'consolidate_purchase_request',
-            'documents',
-            'bids',
-            'status_histories',
-            'audit_logs',
-            'notifications',
-            'purchase_requests',
-            'consolidated_requests',
-            'consolidates',
-            'processes',
-            'users',
-            'departments',
-            'personal_access_tokens',
-            'password_reset_tokens',
-            'failed_jobs'
-        ];
+        // Only allow destructive drops in local/testing environments
+        if (App::environment(['local', 'testing'])) {
+            // Drop all tables in correct order to avoid foreign key issues
+            $tables = [
+                'consolidate_purchase_request',
+                'documents',
+                'bids',
+                'status_histories',
+                'audit_logs',
+                'notifications',
+                'purchase_requests',
+                'consolidated_requests',
+                'consolidates',
+                'processes',
+                'users',
+                'departments',
+                'personal_access_tokens',
+                'password_reset_tokens',
+                'failed_jobs'
+            ];
 
-        foreach ($tables as $table) {
-            try {
-                Schema::dropIfExists($table);
-            } catch (\Exception $e) {
-                // Table might not exist, continue
+            foreach ($tables as $table) {
+                try {
+                    Schema::dropIfExists($table);
+                } catch (\Exception $e) {
+                    // Table might not exist, continue
+                }
             }
         }
 
