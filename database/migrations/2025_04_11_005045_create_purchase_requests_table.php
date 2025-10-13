@@ -10,6 +10,11 @@ return new class extends Migration {
      */
     public function up(): void
     {
+        // Guard against duplicate creation if the table already exists
+        if (Schema::hasTable('purchase_requests')) {
+            return;
+        }
+
         Schema::create('purchase_requests', function (Blueprint $table) {
             $table->id();
             $table->string('name');

@@ -12,6 +12,11 @@ return new class extends Migration
      */
     public function up()
     {
+        // If the purchase_requests table already exists, skip this destructive recreation
+        if (Schema::hasTable('purchase_requests')) {
+            return;
+        }
+
         // Drop foreign key constraints using raw SQL with error handling
         try {
             DB::statement('ALTER TABLE documents DROP CONSTRAINT IF EXISTS documents_purchase_request_id_foreign');
@@ -31,7 +36,7 @@ return new class extends Migration
             // Table might not exist, continue
         }
 
-        // Drop the existing table if it exists
+        // Drop the existing table if it exists (safe because we checked above)
         Schema::dropIfExists('purchase_requests');
 
         // Recreate the table with the new schema (including foreign keys and other necessary columns)
