@@ -40,6 +40,8 @@ RUN echo '#!/bin/bash' > /usr/local/bin/start.sh && \
     echo 'cd /var/www/html' >> /usr/local/bin/start.sh && \
     echo 'echo "Starting Apache..."' >> /usr/local/bin/start.sh && \
     echo 'apache2-foreground & APACHE_PID=$!' >> /usr/local/bin/start.sh && \
+    echo 'echo "Ensuring storage symlink..."' >> /usr/local/bin/start.sh && \
+    echo '[ -L public/storage ] || { rm -rf public/storage; php artisan storage:link || true; }' >> /usr/local/bin/start.sh && \
     echo 'echo "Apache started. Attempting database migrations and seeders..."' >> /usr/local/bin/start.sh && \
     echo 'RETRIES=${MIGRATE_RETRIES:-10}' >> /usr/local/bin/start.sh && \
     echo 'SLEEP=${MIGRATE_SLEEP:-5}' >> /usr/local/bin/start.sh && \
