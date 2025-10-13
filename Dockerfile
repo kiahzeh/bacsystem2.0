@@ -31,16 +31,20 @@ RUN mkdir -p storage/framework/{cache,sessions,views} bootstrap/cache
 RUN chown -R www-data:www-data /var/www/html
 RUN chmod -R 755 /var/www/html
 
-# Create a startup script to run migrations
+# Create a startup script that starts Apache first, then runs migrations
 RUN echo '#!/bin/bash' > /usr/local/bin/start.sh && \
     echo 'cd /var/www/html' >> /usr/local/bin/start.sh && \
-    echo 'echo "Starting Laravel application..."' >> /usr/local/bin/start.sh && \
-    echo 'echo "Running fresh migration..."' >> /usr/local/bin/start.sh && \
-    echo 'php artisan migrate --path=database/migrations/2025_10_12_150000_fresh_start_migration.php --force' >> /usr/local/bin/start.sh && \
-    echo 'echo "Fresh migration completed. Running seeders..."' >> /usr/local/bin/start.sh && \
-    echo 'php artisan db:seed --force' >> /usr/local/bin/start.sh && \
-    echo 'echo "Seeders completed. Starting Apache..."' >> /usr/local/bin/start.sh && \
-    echo 'exec apache2-foreground' >> /usr/local/bin/start.sh && \
+    echo 'echo "Starting Apache..."' >> /usr/local/bin/start.sh && \
+    echo 'apache2-foreground & APACHE_PID=$!' >> /usr/local/bin/start.sh && \
+    echo 'echo "Apache started. Attempting database migrations and seeders..."' >> /usr/local/bin/start.sh && \
+    echo 'RETRIES=${MIGRATE_RETRIES:-10}' >> /usr/local/bin/start.sh && \
+    echo 'SLEEP=${MIGRATE_SLEEP:-5}' >> /usr/local/bin/start.sh && \
+    echo 'for i in $(seq 1 "$RETRIES"); do' >> /usr/local/bin/start.sh && \
+    echo '  php artisan migrate --path=database/migrations/2025_10_12_150000_fresh_start_migration.php --force && php artisan db:seed --force && break' >> /usr/local/bin/start.sh && \
+    echo '  echo "Migration/seed attempt $i failed; retrying in $SLEEP seconds..."' >> /usr/local/bin/start.sh && \
+    echo '  sleep "$SLEEP"' >> /usr/local/bin/start.sh && \
+    echo 'done' >> /usr/local/bin/start.sh && \
+    echo 'wait "$APACHE_PID"' >> /usr/local/bin/start.sh && \
     chmod +x /usr/local/bin/start.sh
 
 # Configure Apache to serve from public directory
