@@ -10,6 +10,19 @@ use Illuminate\Support\Str;
 
 class DocumentController extends Controller
 {
+    private function isAdminUser($user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+        if (isset($user->role) && $user->role === 'admin') {
+            return true;
+        }
+        if (isset($user->is_admin) && ((int) $user->is_admin === 1 || $user->is_admin === true)) {
+            return true;
+        }
+        return false;
+    }
     public function upload(Request $request, PurchaseRequest $purchaseRequest)
     {
         $request->validate([
@@ -41,10 +54,8 @@ class DocumentController extends Controller
 
     public function download(Document $document)
     {
-        // Check if user has permission to download
-        if (!auth()->user()->can('view', $document->purchaseRequest)) {
-            abort(403);
-        }
+        // Authorize via policy
+        $this->authorize('view', $document->purchaseRequest);
 
         // Check if file path exists
         if (!$document->path) {
@@ -61,10 +72,8 @@ class DocumentController extends Controller
 
     public function view(Document $document)
     {
-        // Check if user has permission to view
-        if (!auth()->user()->can('view', $document->purchaseRequest)) {
-            abort(403);
-        }
+        // Authorize via policy
+        $this->authorize('view', $document->purchaseRequest);
 
         // Check if file path exists
         if (!$document->path) {
@@ -89,17 +98,7 @@ class DocumentController extends Controller
     {
         // Check if user has permission to delete
         $user = auth()->user();
-        $isAdmin = false;
-        if ($user) {
-            if (isset($user->role) && $user->role === 'admin') {
-                $isAdmin = true;
-            } elseif (isset($user->is_admin) && ((int) $user->is_admin === 1 || $user->is_admin === true)) {
-                $isAdmin = true;
-            } elseif (method_exists($user, 'isAdmin')) {
-                try { $isAdmin = (bool) $user->isAdmin(); } catch (\Throwable $e) { $isAdmin = false; }
-            }
-        }
-        if (!$isAdmin) {
+        if (!$this->isAdminUser($user)) {
             abort(403);
         }
 
@@ -118,17 +117,7 @@ class DocumentController extends Controller
     {
         // Check if user has permission to approve
         $user = auth()->user();
-        $isAdmin = false;
-        if ($user) {
-            if (isset($user->role) && $user->role === 'admin') {
-                $isAdmin = true;
-            } elseif (isset($user->is_admin) && ((int) $user->is_admin === 1 || $user->is_admin === true)) {
-                $isAdmin = true;
-            } elseif (method_exists($user, 'isAdmin')) {
-                try { $isAdmin = (bool) $user->isAdmin(); } catch (\Throwable $e) { $isAdmin = false; }
-            }
-        }
-        if (!$isAdmin) {
+        if (!$this->isAdminUser($user)) {
             abort(403);
         }
 
@@ -141,17 +130,7 @@ class DocumentController extends Controller
     {
         // Check if user has permission to reject
         $user = auth()->user();
-        $isAdmin = false;
-        if ($user) {
-            if (isset($user->role) && $user->role === 'admin') {
-                $isAdmin = true;
-            } elseif (isset($user->is_admin) && ((int) $user->is_admin === 1 || $user->is_admin === true)) {
-                $isAdmin = true;
-            } elseif (method_exists($user, 'isAdmin')) {
-                try { $isAdmin = (bool) $user->isAdmin(); } catch (\Throwable $e) { $isAdmin = false; }
-            }
-        }
-        if (!$isAdmin) {
+        if (!$this->isAdminUser($user)) {
             abort(403);
         }
 
