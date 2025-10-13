@@ -178,7 +178,7 @@ class PurchaseRequest extends Model
 
     public function consolidatedRequests()
     {
-        return $this->belongsToMany(Consolidate::class, 'consolidate_purchase_request', 'pr_id', 'consolidate_id');
+        return $this->belongsToMany(Consolidate::class, 'consolidate_purchase_request', 'purchase_request_id', 'consolidate_id');
     }
 
     public function consolidatedGroups()

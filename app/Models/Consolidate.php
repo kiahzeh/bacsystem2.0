@@ -18,7 +18,7 @@ class Consolidate extends Model
     // Define the correct many-to-many relationship for PurchaseRequest
     public function purchaseRequests()
     {
-        return $this->belongsToMany(PurchaseRequest::class, 'consolidate_purchase_request', 'consolidate_id', 'pr_id');
+        return $this->belongsToMany(PurchaseRequest::class, 'consolidate_purchase_request', 'consolidate_id', 'purchase_request_id');
     }
 
     protected static function boot()
