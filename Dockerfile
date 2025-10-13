@@ -47,6 +47,8 @@ RUN echo '#!/bin/bash' > /usr/local/bin/start.sh && \
 RUN a2enmod rewrite
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/apache2.conf
+RUN sed -i 's/Listen 80/Listen 8080/' /etc/apache2/ports.conf && \
+    sed -i 's/<VirtualHost \*:80>/<VirtualHost *:8080>/' /etc/apache2/sites-available/000-default.conf
 
 # Copy .htaccess to public directory
 COPY .htaccess /var/www/html/public/.htaccess
