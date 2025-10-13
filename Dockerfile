@@ -46,7 +46,7 @@ RUN echo '#!/bin/bash' > /usr/local/bin/start.sh && \
     echo 'RETRIES=${MIGRATE_RETRIES:-10}' >> /usr/local/bin/start.sh && \
     echo 'SLEEP=${MIGRATE_SLEEP:-5}' >> /usr/local/bin/start.sh && \
     echo 'for i in $(seq 1 "$RETRIES"); do' >> /usr/local/bin/start.sh && \
-    echo '  php artisan migrate --path=database/migrations/2025_10_12_150000_fresh_start_migration.php --force && php artisan db:seed --force && break' >> /usr/local/bin/start.sh && \
+    echo '  php artisan migrate --force && php artisan db:seed --force && break' >> /usr/local/bin/start.sh && \
     echo '  echo "Migration/seed attempt $i failed; retrying in $SLEEP seconds..."' >> /usr/local/bin/start.sh && \
     echo '  sleep "$SLEEP"' >> /usr/local/bin/start.sh && \
     echo 'done' >> /usr/local/bin/start.sh && \
