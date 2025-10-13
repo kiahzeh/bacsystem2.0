@@ -49,6 +49,8 @@ RUN echo '#!/bin/bash' > /usr/local/bin/start.sh && \
 
 # Configure Apache to serve from public directory
 RUN a2enmod rewrite
+# Suppress Apache ServerName warning
+RUN echo 'ServerName localhost' > /etc/apache2/conf-available/servername.conf && a2enconf servername
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/apache2.conf
 RUN sed -i 's/Listen 80/Listen 8080/' /etc/apache2/ports.conf && \
