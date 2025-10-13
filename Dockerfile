@@ -31,6 +31,10 @@ RUN mkdir -p storage/framework/{cache,sessions,views} bootstrap/cache
 RUN chown -R www-data:www-data /var/www/html
 RUN chmod -R 755 /var/www/html
 
+# Default retry settings for DB migrations on boot
+ENV MIGRATE_RETRIES=20
+ENV MIGRATE_SLEEP=5
+
 # Create a startup script that starts Apache first, then runs migrations
 RUN echo '#!/bin/bash' > /usr/local/bin/start.sh && \
     echo 'cd /var/www/html' >> /usr/local/bin/start.sh && \
