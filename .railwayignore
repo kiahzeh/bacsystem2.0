@@ -1,2 +1,2 @@
-# (Previously) ignored Docker files to force Nixpacks
-# We now allow Docker build for Railway; no ignores needed here.
+# Ignore Dockerfile so Railway uses Nixpacks
+Dockerfile
