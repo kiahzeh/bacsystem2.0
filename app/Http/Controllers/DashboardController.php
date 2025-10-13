@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use App\Models\Document;
 use App\Models\AuditLog;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
@@ -72,13 +73,26 @@ class DashboardController extends Controller
             ->latest()
             ->get();
 
-        $consolidatedPRs = Consolidate::with('purchaseRequests')->get();
+        // Load consolidated PRs defensively to avoid breaking the dashboard
+        try {
+            $consolidatedPRs = Consolidate::with('purchaseRequests')->get();
+        } catch (\Throwable $e) {
+            Log::error('Failed to load consolidated PRs', [
+                'error' => $e->getMessage(),
+            ]);
+            $consolidatedPRs = collect();
+        }
         
         // Get purchase requests for the user
-        $purchaseRequests = PurchaseRequest::when(!$user->isAdmin(), function($query) use ($user) {
+        $purchaseRequests = PurchaseRequest::when(!$user || !$user->isAdmin(), function($query) use ($user) {
                 $query->where(function($subQuery) use ($user) {
-                    $subQuery->where('user_id', $user->id)
-                             ->orWhere('department_id', $user->department_id);
+                    if ($user) {
+                        $subQuery->where('user_id', $user->id)
+                                 ->orWhere('department_id', $user->department_id);
+                    } else {
+                        // If somehow user is null, return no results
+                        $subQuery->whereRaw('1 = 0');
+                    }
                 });
             })
             ->when($search, fn($query) => $query->where('pr_number', 'like', "%$search%"))
@@ -86,18 +100,40 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        // Get recent documents
-        $recentDocuments = Document::whereHas('purchaseRequest', function($query) use ($user) {
-            $query->where('user_id', $user->id)
-                ->orWhere('department_id', $user->department_id);
-        })->latest()->take(5)->get();
+        // Get recent documents (defensive against relation issues)
+        try {
+            $recentDocuments = Document::whereHas('purchaseRequest', function($query) use ($user) {
+                if ($user) {
+                    $query->where('user_id', $user->id)
+                          ->orWhere('department_id', $user->department_id);
+                } else {
+                    $query->whereRaw('1 = 0');
+                }
+            })->latest()->take(5)->get();
+        } catch (\Throwable $e) {
+            Log::error('Failed to load recent documents', [
+                'error' => $e->getMessage(),
+            ]);
+            $recentDocuments = collect();
+        }
 
-        // Get recent audit logs
-        $recentAuditLogs = AuditLog::where('user_id', $user->id)
-            ->orWhereHas('model', function($query) use ($user) {
-                $query->where('user_id', $user->id)
-                    ->orWhere('department_id', $user->department_id);
-            })->latest()->take(10)->get();
+        // Get recent audit logs (defensive against morph relation issues)
+        try {
+            $recentAuditLogs = AuditLog::where('user_id', $user ? $user->id : null)
+                ->orWhereHas('model', function($query) use ($user) {
+                    if ($user) {
+                        $query->where('user_id', $user->id)
+                              ->orWhere('department_id', $user->department_id);
+                    } else {
+                        $query->whereRaw('1 = 0');
+                    }
+                })->latest()->take(10)->get();
+        } catch (\Throwable $e) {
+            Log::error('Failed to load recent audit logs', [
+                'error' => $e->getMessage(),
+            ]);
+            $recentAuditLogs = collect();
+        }
 
         // Get statistics
         $stats = [
@@ -112,7 +148,7 @@ class DashboardController extends Controller
 
         // Get department statistics if user is department head
         $departmentStats = null;
-        if (property_exists($user, 'is_department_head') && $user->is_department_head) {
+        if ($user && property_exists($user, 'is_department_head') && $user->is_department_head) {
             $departmentStats = [
                 'total_requests' => PurchaseRequest::where('department_id', $user->department_id)->count(),
                 'pending_requests' => PurchaseRequest::where('department_id', $user->department_id)
