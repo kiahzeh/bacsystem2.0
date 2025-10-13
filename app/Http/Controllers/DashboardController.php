@@ -13,6 +13,29 @@ use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
+    protected function isAdmin($user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+        // Prefer explicit role or flag if available
+        if (isset($user->role) && $user->role === 'admin') {
+            return true;
+        }
+        if (isset($user->is_admin) && ((int) $user->is_admin === 1 || $user->is_admin === true)) {
+            return true;
+        }
+        // Fallback to method if defined
+        try {
+            if (method_exists($user, 'isAdmin')) {
+                return (bool) $user->isAdmin();
+            }
+        } catch (\Throwable $e) {
+            // ignore and treat as non-admin
+        }
+        return false;
+    }
+
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -84,7 +107,7 @@ class DashboardController extends Controller
         }
         
         // Get purchase requests for the user
-        $purchaseRequests = PurchaseRequest::when(!$user || !$user->isAdmin(), function($query) use ($user) {
+        $purchaseRequests = PurchaseRequest::when(!$this->isAdmin($user), function($query) use ($user) {
                 $query->where(function($subQuery) use ($user) {
                     if ($user) {
                         $subQuery->where('user_id', $user->id)
