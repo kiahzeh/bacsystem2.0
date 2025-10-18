@@ -29,16 +29,21 @@ ENV RAILWAY_SERVICE_ID=${RAILWAY_SERVICE_ID}
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         libpng-dev \
+        libjpeg62-turbo-dev \
+        libfreetype6-dev \
         libxml2-dev \
         libzip-dev \
         zip \
         unzip \
         libpq-dev \
+        libonig-dev \
+        pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-# Enable required PHP extensions (incl. zip for phpspreadsheet)
-RUN docker-php-ext-configure zip \
-    && docker-php-ext-install \
+# Enable required PHP extensions (incl. zip for phpspreadsheet, mbstring needs oniguruma)
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-configure zip \
+    && docker-php-ext-install -j"$(nproc)" \
         pdo \
         pdo_pgsql \
         mbstring \
