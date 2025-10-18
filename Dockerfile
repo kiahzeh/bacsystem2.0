@@ -1,54 +1,77 @@
-# Simple production Dockerfile for Laravel + Apache
+# syntax=docker/dockerfile:1.5
 
-# Build static assets with Vite (keeps views from 500s)
+# ---- ASSETS (Vite) ----
 FROM node:20-alpine AS assets
 WORKDIR /app
+
+# Only copy package manifests first to leverage layer caching
 COPY package.json package-lock.json ./
-RUN npm ci --no-audit --no-fund
+
+# Cache npm downloads between builds
+RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
+
+# Copy only what build needs
 COPY vite.config.js postcss.config.js tailwind.config.js ./
 COPY resources ./resources
 COPY public ./public
-ENV NODE_ENV=production
-RUN npm run build
 
-# Runtime image
+ENV NODE_ENV=production
+# Use cache during build too (for any postinstall fetches)
+RUN --mount=type=cache,target=/root/.npm npm run build
+
+# ---- RUNTIME (Apache + PHP) ----
 FROM php:8.2-apache
 
-# Install PHP extensions (include zip for phpspreadsheet)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpng-dev libonig-dev libxml2-dev libzip-dev zip unzip libpq-dev \
-    && rm -rf /var/lib/apt/lists/* \
-    && docker-php-ext-configure zip \
-    && docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd zip
+# System libs for PHP extensions
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        libpng-dev \
+        libxml2-dev \
+        libzip-dev \
+        zip \
+        unzip \
+        libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Add Composer
+# Enable required PHP extensions (incl. zip for phpspreadsheet)
+RUN docker-php-ext-configure zip \
+    && docker-php-ext-install \
+        pdo \
+        pdo_pgsql \
+        mbstring \
+        exif \
+        pcntl \
+        bcmath \
+        gd \
+        zip
+
+# Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# App files
 WORKDIR /var/www/html
+
+# Leverage Composer cache and layer caching: install deps before app copy
+COPY composer.json composer.lock ./
+RUN --mount=type=cache,target=/root/.composer/cache \
+    composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
+
+# Copy application code
 COPY . .
 
-# Copy built assets
+# Copy built Vite assets from assets stage
 COPY --from=assets /app/public/build /var/www/html/public/build
 
-# Install PHP deps
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
+# Apache config: serve Laravel from public and listen on 8080
+RUN sed -i 's#DocumentRoot /var/www/html#DocumentRoot /var/www/html/public#' /etc/apache2/sites-available/000-default.conf \
+    && sed -i 's#<Directory /var/www/>#<Directory /var/www/html/public/>#' /etc/apache2/apache2.conf \
+    && sed -i 's#AllowOverride None#AllowOverride All#' /etc/apache2/apache2.conf \
+    && echo 'Listen 8080' > /etc/apache2/ports.conf \
+    && a2enmod rewrite
 
-# Apache + permissions
-RUN a2enmod rewrite && \
-    echo 'ServerName localhost' > /etc/apache2/conf-available/servername.conf && a2enconf servername && \
-    sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf && \
-    sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/apache2.conf && \
-    sed -i 's/Listen 80/Listen 8080/' /etc/apache2/ports.conf && \
-    sed -i 's/<VirtualHost \*:80>/<VirtualHost *:8080>/' /etc/apache2/sites-available/000-default.conf && \
-    mkdir -p storage/framework/{cache,sessions,views} bootstrap/cache && \
-    chown -R www-data:www-data storage bootstrap/cache && \
-    chmod -R 755 storage bootstrap/cache
-
-# Public .htaccess
-COPY .htaccess /var/www/html/public/.htaccess
+# Permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && find /var/www/html/storage -type d -exec chmod 775 {} \; \
+    && find /var/www/html/bootstrap/cache -type d -exec chmod 775 {} \;
 
 EXPOSE 8080
-
-# Start Apache
 CMD ["apache2-foreground"]
