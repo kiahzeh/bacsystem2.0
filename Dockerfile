@@ -60,10 +60,13 @@ WORKDIR /var/www/html
 
 # Install Composer deps before app copy for better layer caching
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader --no-scripts
 
 # Copy application code
 COPY . .
+
+# Run Composer scripts that require application code (safe fallback if env missing)
+RUN composer dump-autoload --optimize && php artisan package:discover --ansi || true
 
 # Copy built Vite assets from assets stage
 COPY --from=assets /app/public/build /var/www/html/public/build
