@@ -13,6 +13,9 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
         
+        // Disable Vite during tests to avoid asset loading errors
+        $this->withoutVite();
+        
         // Run test database seeder to create default department
         $this->seed(\Database\Seeders\TestDatabaseSeeder::class);
     }

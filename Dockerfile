@@ -1,7 +1,7 @@
 FROM php:8.2-apache
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
     libpng-dev \
@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     libpq-dev \
+    && rm -rf /var/lib/apt/lists/* \
     && docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
 
 # Install Composer
@@ -22,7 +23,7 @@ WORKDIR /var/www/html
 COPY . .
 
 # Install dependencies without scripts
-RUN composer install --no-dev --optimize-autoloader --no-scripts --ignore-platform-reqs
+RUN composer install --no-dev --optimize-autoloader --no-scripts --ignore-platform-reqs --no-interaction --prefer-dist
 
 # Create necessary directories
 RUN mkdir -p storage/framework/{cache,sessions,views} bootstrap/cache
