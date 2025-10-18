@@ -4,7 +4,7 @@
     "builder": "DOCKERFILE"
   },
   "deploy": {
-    "startCommand": "/usr/local/bin/start.sh",
+    "startCommand": "/usr/local/bin/apache2-foreground",
     "healthcheckPath": "/robots.txt",
     "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
