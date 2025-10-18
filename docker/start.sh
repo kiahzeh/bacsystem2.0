@@ -18,4 +18,12 @@ apache2ctl -M | grep -q rewrite || a2enmod rewrite
 # Log what port we’re using
 echo "Starting Apache on port $PORT"
 
+# Prepare Laravel cache and view compiled directories
+mkdir -p /var/www/html/storage/framework/views \
+         /var/www/html/storage/framework/sessions \
+         /var/www/html/storage/framework/cache/data \
+         /var/www/html/bootstrap/cache
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
 exec /usr/local/bin/apache2-foreground
