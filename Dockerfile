@@ -1,3 +1,23 @@
+# Stage 1: Build frontend assets with Vite
+FROM node:20-alpine AS assets-builder
+WORKDIR /app
+
+# Install Node dependencies
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+
+# Copy Vite/Tailwind configs and source assets
+COPY vite.config.js ./
+COPY postcss.config.js ./
+COPY tailwind.config.js ./
+COPY resources ./resources
+COPY public ./public
+
+# Build production assets; output goes to public/build
+ENV NODE_ENV=production
+RUN npm run build
+
+# Stage 2: PHP + Apache runtime
 FROM php:8.2-apache
 
 # Install system dependencies
@@ -22,7 +42,10 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . .
 
-# Install dependencies without scripts
+# Copy built assets from the Node builder stage
+COPY --from=assets-builder /app/public/build /var/www/html/public/build
+
+# Install PHP dependencies without scripts
 RUN composer install --no-dev --optimize-autoloader --no-scripts --ignore-platform-reqs --no-interaction --prefer-dist
 
 # Create necessary directories
