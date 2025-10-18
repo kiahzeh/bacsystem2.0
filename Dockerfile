@@ -4,6 +4,7 @@
 FROM node:20-alpine AS assets
 WORKDIR /app
 ARG CACHE_KEY
+ENV CACHE_KEY=${CACHE_KEY}
 
 # Only copy package manifests first to leverage layer caching
 COPY package.json package-lock.json ./
@@ -23,6 +24,7 @@ RUN --mount=type=cache,id=${CACHE_KEY}-npm-cache,target=/root/.npm npm run build
 # ---- RUNTIME (Apache + PHP) ----
 FROM php:8.2-apache
 ARG CACHE_KEY
+ENV CACHE_KEY=${CACHE_KEY}
 
 # System libs for PHP extensions
 RUN apt-get update \
