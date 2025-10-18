@@ -14,11 +14,12 @@ RUN npm run build
 # Runtime image
 FROM php:8.2-apache
 
-# Install PHP extensions
+# Install PHP extensions (include zip for phpspreadsheet)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpng-dev libonig-dev libxml2-dev zip unzip libpq-dev \
+    libpng-dev libonig-dev libxml2-dev libzip-dev zip unzip libpq-dev \
     && rm -rf /var/lib/apt/lists/* \
-    && docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
+    && docker-php-ext-configure zip \
+    && docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd zip
 
 # Add Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
