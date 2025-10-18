@@ -4,7 +4,7 @@
     "builder": "DOCKERFILE"
   },
   "deploy": {
-    "startCommand": "php -S 0.0.0.0:$PORT -t public public/index.php",
+    "startCommand": "/usr/local/bin/start.sh",
     "healthcheckPath": "/robots.txt",
     "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",

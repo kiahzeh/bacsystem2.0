@@ -71,12 +71,15 @@ RUN composer dump-autoload --optimize && php artisan package:discover --ansi || 
 # Copy built Vite assets from assets stage
 COPY --from=assets /app/public/build /var/www/html/public/build
 
-# Apache config: serve Laravel from public and listen on 8080
+# Apache config: serve Laravel from public
 RUN sed -i 's#DocumentRoot /var/www/html#DocumentRoot /var/www/html/public#' /etc/apache2/sites-available/000-default.conf \
     && sed -i 's#<Directory /var/www/>#<Directory /var/www/html/public/>#' /etc/apache2/apache2.conf \
     && sed -i 's#AllowOverride None#AllowOverride All#' /etc/apache2/apache2.conf \
-    && echo 'Listen 8080' > /etc/apache2/ports.conf \
     && a2enmod rewrite
+
+# Runtime start script to bind Apache to $PORT
+COPY docker/start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
 
 # Permissions
 RUN chown -R www-data:www-data /var/www/html \
@@ -84,4 +87,4 @@ RUN chown -R www-data:www-data /var/www/html \
     && find /var/www/html/bootstrap/cache -type d -exec chmod 775 {} \;
 
 EXPOSE 8080
-CMD ["apache2-foreground"]
+CMD ["/usr/local/bin/start.sh"]
