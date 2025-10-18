@@ -11,16 +11,20 @@ return new class extends Migration
      */
     public function up()
 {
-    Schema::table('purchase_requests', function (Blueprint $table) {
-        $table->string('funding')->nullable();  // Add funding column
-    });
+    if (!Schema::hasColumn('purchase_requests', 'funding')) {
+        Schema::table('purchase_requests', function (Blueprint $table) {
+            $table->string('funding')->nullable();
+        });
+    }
 }
 
 public function down()
 {
-    Schema::table('purchase_requests', function (Blueprint $table) {
-        $table->dropColumn('funding');  // Drop funding column if rollback
-    });
+    if (Schema::hasColumn('purchase_requests', 'funding')) {
+        Schema::table('purchase_requests', function (Blueprint $table) {
+            $table->dropColumn('funding');
+        });
+    }
 }
 
 };

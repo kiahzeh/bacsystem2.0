@@ -1,2 +1,2 @@
-# Ignore Dockerfile so Railway uses Nixpacks
-Dockerfile
+# Allow Dockerfile to be detected by Railway (Docker builder)
+# Intentionally empty

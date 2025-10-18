@@ -173,10 +173,17 @@ return new class extends Migration
         if (!Schema::hasTable('status_histories')) {
             Schema::create('status_histories', function (Blueprint $table) {
                 $table->id();
-                $table->string('status');
-                $table->text('notes')->nullable();
                 $table->foreignId('purchase_request_id')->constrained()->onDelete('cascade');
+                $table->string('status');
+                // Use 'remarks' consistently across the app (matches older migrations and models)
+                $table->text('remarks')->nullable();
                 $table->foreignId('user_id')->constrained()->onDelete('cascade');
+                // Enhanced workflow tracking fields
+                $table->timestamp('started_at')->nullable();
+                $table->timestamp('completed_at')->nullable();
+                $table->boolean('is_skipped')->default(false);
+                $table->integer('step_order')->nullable();
+                $table->boolean('required_documents_completed')->default(false);
                 $table->timestamps();
             });
         }

@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('purchase_requests', function (Blueprint $table) {
-            $table->dropColumn('type');
-        });
+        if (Schema::hasColumn('purchase_requests', 'type')) {
+            Schema::table('purchase_requests', function (Blueprint $table) {
+                $table->dropColumn('type');
+            });
+        }
     }
 
     /**
@@ -21,8 +23,10 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('purchase_requests', function (Blueprint $table) {
-            $table->string('type')->nullable();
-        });
+        if (!Schema::hasColumn('purchase_requests', 'type')) {
+            Schema::table('purchase_requests', function (Blueprint $table) {
+                $table->string('type')->nullable();
+            });
+        }
     }
 };

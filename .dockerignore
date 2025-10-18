@@ -1,0 +1,26 @@
+# Keep secrets and dev artifacts out of Docker build context
+# Secrets
+.env
+.env.*
+storage/*.key
+
+# VCS & metadata
+.git
+.gitignore
+.DS_Store
+Thumbs.db
+
+# Build outputs
+public/build
+.next
+.vercel
+coverage
+
+# Local dependencies (rebuilt inside image)
+node_modules
+vendor
+
+# Generated/runtime files
+storage/logs
+storage/framework/*
+public/storage

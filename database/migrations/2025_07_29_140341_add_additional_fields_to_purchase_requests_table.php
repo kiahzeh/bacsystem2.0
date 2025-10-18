@@ -11,12 +11,28 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('purchase_requests', function (Blueprint $table) {
-            $table->string('project_title')->nullable(); // Project title
-            $table->string('mode_of_procurement')->nullable(); // Mode of procurement
-            $table->decimal('abc_approved_budget', 15, 2)->nullable(); // ABC/Approved Budget for Contract
-            $table->string('category')->nullable(); // Category
-            $table->text('purpose_description')->nullable(); // Purpose/Description
+        $hasProjectTitle = Schema::hasColumn('purchase_requests', 'project_title');
+        $hasMode = Schema::hasColumn('purchase_requests', 'mode_of_procurement');
+        $hasAbc = Schema::hasColumn('purchase_requests', 'abc_approved_budget');
+        $hasCategory = Schema::hasColumn('purchase_requests', 'category');
+        $hasPurpose = Schema::hasColumn('purchase_requests', 'purpose_description');
+
+        Schema::table('purchase_requests', function (Blueprint $table) use ($hasProjectTitle, $hasMode, $hasAbc, $hasCategory, $hasPurpose) {
+            if (!$hasProjectTitle) {
+                $table->string('project_title')->nullable();
+            }
+            if (!$hasMode) {
+                $table->string('mode_of_procurement')->nullable();
+            }
+            if (!$hasAbc) {
+                $table->decimal('abc_approved_budget', 15, 2)->nullable();
+            }
+            if (!$hasCategory) {
+                $table->string('category')->nullable();
+            }
+            if (!$hasPurpose) {
+                $table->text('purpose_description')->nullable();
+            }
         });
     }
 
@@ -26,13 +42,21 @@ return new class extends Migration
     public function down()
     {
         Schema::table('purchase_requests', function (Blueprint $table) {
-            $table->dropColumn([
-                'project_title',
-                'mode_of_procurement',
-                'abc_approved_budget',
-                'category',
-                'purpose_description'
-            ]);
+            if (Schema::hasColumn('purchase_requests', 'project_title')) {
+                $table->dropColumn('project_title');
+            }
+            if (Schema::hasColumn('purchase_requests', 'mode_of_procurement')) {
+                $table->dropColumn('mode_of_procurement');
+            }
+            if (Schema::hasColumn('purchase_requests', 'abc_approved_budget')) {
+                $table->dropColumn('abc_approved_budget');
+            }
+            if (Schema::hasColumn('purchase_requests', 'category')) {
+                $table->dropColumn('category');
+            }
+            if (Schema::hasColumn('purchase_requests', 'purpose_description')) {
+                $table->dropColumn('purpose_description');
+            }
         });
     }
 };

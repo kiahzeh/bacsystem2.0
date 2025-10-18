@@ -156,6 +156,132 @@
                     </div>
                 </div>
 
+                <!-- Additional Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="glassmorphism-card rounded-lg p-6 border-l-4 border-indigo-500">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-indigo-100 rounded-lg">
+                                <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h18M3 7h18M3 11h18M3 15h18M3 19h18"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-white">Pending PRs</p>
+                                <p class="text-2xl font-bold text-white">{{ $pendingCount ?? 0 }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glassmorphism-card rounded-lg p-6 border-l-4 border-teal-500">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-teal-100 rounded-lg">
+                                <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-white">Completed PRs</p>
+                                <p class="text-2xl font-bold text-white">{{ $completedCount ?? 0 }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glassmorphism-card rounded-lg p-6 border-l-4 border-pink-500">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-pink-100 rounded-lg">
+                                <svg class="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v16h16V4H4zm4 4h8v8H8V8z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-white">Documents</p>
+                                <p class="text-2xl font-bold text-white">{{ $documentsCount ?? 0 }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glassmorphism-card rounded-lg p-6 border-l-4 border-orange-500">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-orange-100 rounded-lg">
+                                <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5V4H2v16h5M7 20V4m10 0v16"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-white">Departments</p>
+                                <p class="text-2xl font-bold text-white">{{ $departmentsCount ?? 0 }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glassmorphism-card rounded-lg p-6 border-l-4 border-emerald-500">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-emerald-100 rounded-lg">
+                                <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v8m8-8H4m16 8H4"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-white">New PRs Today</p>
+                                <p class="text-2xl font-bold text-white">{{ $todayNewPRs ?? 0 }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glassmorphism-card rounded-lg p-6 border-l-4 border-sky-500">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-sky-100 rounded-lg">
+                                <svg class="w-6 h-6 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12h18M3 6h18M3 18h18"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-white">PRs This Month</p>
+                                <p class="text-2xl font-bold text-white">{{ $thisMonthPRs ?? 0 }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glassmorphism-card rounded-lg p-6 border-l-4 border-gray-500">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-gray-100 rounded-lg">
+                                <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3M12 22a10 10 0 100-20 10 10 0 000 20z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-white">Avg Cycle Time (days)</p>
+                                <p class="text-2xl font-bold text-white">{{ $avgCycleTimeDays ?? 0 }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glassmorphism-card rounded-lg p-6 border-l-4 border-orange-500">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-orange-100 rounded-lg">
+                                <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4M12 16h.01M8.257 3.099c.765-1.36 2.721-1.36 3.486 0l7.451 13.247c.724 1.288-.186 2.904-1.743 2.904H2.55c-1.557 0-2.467-1.616-1.743-2.904L8.257 3.1z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-white">Pending Documents</p>
+                                <p class="text-2xl font-bold text-white">{{ $pendingDocumentsCount ?? 0 }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glassmorphism-card rounded-lg p-6 border-l-4 border-red-500">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-red-100 rounded-lg">
+                                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-white">Unread Notifications</p>
+                                <p class="text-2xl font-bold text-white">{{ $unreadNotificationsCount ?? 0 }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Live Search Bar -->
                 <div class="mb-8">
                     <div class="relative w-full max-w-xl mx-auto">
@@ -229,6 +355,49 @@
                                 </div>
                             </div>
                             <div class="p-6">
+                                <!-- Monthly PR Trend Chart -->
+                                <div class="mb-6">
+                                    <h3 class="text-lg font-bold mb-4 text-white glass-heading">Monthly PR Trend</h3>
+                                    <div class="relative h-64 bg-white/5 rounded-lg p-4 border border-white/10">
+                                        <canvas id="prMonthlyChart"></canvas>
+                                    </div>
+                                </div>
+                                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                                <script>
+                                    (function(){
+                                        const labels = {!! json_encode($prMonthlyLabels ?? []) !!};
+                                        const series = {!! json_encode($prMonthlyData ?? []) !!};
+                                        const canvas = document.getElementById('prMonthlyChart');
+                                        if (!canvas) return;
+                                        const ctx = canvas.getContext('2d');
+                                        new Chart(ctx, {
+                                            type: 'bar',
+                                            data: {
+                                                labels: labels,
+                                                datasets: [{
+                                                    label: 'PRs Created',
+                                                    data: series,
+                                                    backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                                                    borderColor: 'rgba(59, 130, 246, 1)',
+                                                    borderWidth: 1
+                                                }]
+                                            },
+                                            options: {
+                                                responsive: true,
+                                                maintainAspectRatio: false,
+                                                scales: {
+                                                    y: {
+                                                        beginAtZero: true,
+                                                        ticks: { precision: 0 }
+                                                    }
+                                                },
+                                                plugins: {
+                                                    legend: { display: false }
+                                                }
+                                            }
+                                        });
+                                    })();
+                                </script>
                                 <!-- Alternative Bids Section -->
                                 <div class="mb-6">
                                     <h3 class="text-lg font-bold mb-4 text-white glass-heading">Alternative Bids</h3>
@@ -540,9 +709,9 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                                     </svg>
                                     <h3 class="text-lg font-bold text-white">Recent Notifications</h3>
-                                    @if(auth()->user()->unreadNotifications->count() > 0)
+                                    @if(($unreadNotificationsCount ?? 0) > 0)
                                         <span class="text-sm font-medium text-violet-300 bg-violet-500/20 px-2 py-1 rounded-full">
-                                            {{ auth()->user()->unreadNotifications->count() }} unread
+                                            {{ $unreadNotificationsCount }} unread
                                         </span>
                                     @endif
                                 </div>
@@ -694,7 +863,7 @@
                             </div>
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-white">Notifications</p>
-                                <p class="text-2xl font-bold text-white">{{ auth()->user()->unreadNotifications->count() }}</p>
+                                <p class="text-2xl font-bold text-white">{{ $unreadNotificationsCount ?? 0 }}</p>
                             </div>
                         </div>
                     </div>

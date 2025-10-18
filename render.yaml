@@ -2,18 +2,43 @@ services:
   - type: web
     name: bacsystem
     env: php
+    healthCheckPath: /robots.txt
     buildCommand: |
       php artisan optimize:clear
       composer install --no-interaction --prefer-dist --optimize-autoloader
       npm install && npm run build
-      php artisan migrate --force
-      php artisan db:seed --force --class=DepartmentSeeder
-      php artisan db:seed --force --class=UserSeeder
-      php artisan db:seed --force --class=PurchaseRequestSeeder
-      php artisan db:seed --force --class=BidSeeder
     startCommand: |
-      echo "ServerName localhost" >> /etc/apache2/apache2.conf
-      php artisan serve --host 0.0.0.0 --port $PORT
+      set -e
+      # Start the web server immediately so health checks can pass
+      php -S 0.0.0.0:$PORT -t public public/index.php & SERVER_PID=$!
+      echo "Web server started on port $PORT (pid $SERVER_PID)"
+
+      # Prepare app caches and storage symlink without blocking the server
+      php artisan optimize:clear || true
+      php artisan config:cache || true
+      php artisan route:cache || true
+      php artisan view:cache || true
+      php artisan storage:link || true
+
+      # Run migrations with retries; do not block health checks
+      RETRIES=${MIGRATE_RETRIES:-10}
+      SLEEP=${MIGRATE_SLEEP:-5}
+      if [ "${SKIP_AUTO_MIGRATE:-false}" != "true" ]; then
+        echo "Attempting database migrations..."
+        for i in $(seq 1 "$RETRIES"); do
+          php artisan migrate --force && break || true
+          echo "Migration attempt $i failed; retrying in $SLEEP seconds..."
+          sleep "$SLEEP"
+        done
+      fi
+
+      # Optional seeding
+      if [ "${RUN_DB_SEED:-false}" = "true" ]; then
+        php artisan db:seed --force || true
+      fi
+
+      # Keep the process attached to the web server
+      wait "$SERVER_PID"
     envVars:
       - key: APP_ENV
         value: production
@@ -35,6 +60,14 @@ services:
         sync: false
       - key: DB_PASSWORD
         sync: false
+      - key: MIGRATE_RETRIES
+        value: 10
+      - key: MIGRATE_SLEEP
+        value: 5
+      - key: SKIP_AUTO_MIGRATE
+        value: false
+      - key: RUN_DB_SEED
+        value: false
       - key: MAIL_MAILER
         value: smtp
       - key: MAIL_HOST

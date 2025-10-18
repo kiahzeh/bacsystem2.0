@@ -8,8 +8,12 @@ use App\Models\Consolidate;  // Assuming you have this model for CPR
 use Carbon\Carbon;
 use App\Models\Document;
 use App\Models\AuditLog;
+use App\Models\User;
+use App\Models\Department;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -38,6 +42,7 @@ class DashboardController extends Controller
 
     public function index(Request $request)
     {
+        /** @var \App\Models\User|null $user */
         $user = Auth::user();
         $search = $request->input('search');
         
@@ -187,6 +192,79 @@ class DashboardController extends Controller
         $competitiveCount = PurchaseRequest::where('mode_of_procurement', 'Competitive')->count();
         $consolidatedCount = Consolidate::count();
 
+        // Additional global statistics for dashboard cards
+        $pendingCount = PurchaseRequest::where('status', '!=', 'Completed')->count();
+        $completedCount = PurchaseRequest::where('status', 'Completed')->count();
+        $documentsCount = Document::count();
+        $usersCount = User::count();
+        $departmentsCount = Department::count();
+        $todayNewPRs = PurchaseRequest::whereDate('created_at', Carbon::today())->count();
+        $thisMonthPRs = PurchaseRequest::whereBetween('created_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])->count();
+
+        // Average cycle time in days (order_date -> completion_date) for completed PRs
+        $completedWithDates = PurchaseRequest::whereNotNull('order_date')
+            ->whereNotNull('completion_date')
+            ->where('status', 'Completed')
+            ->get();
+        $sumCycleDays = $completedWithDates->reduce(function ($carry, $pr) {
+            try {
+                return $carry + Carbon::parse($pr->order_date)->diffInDays(Carbon::parse($pr->completion_date));
+            } catch (\Throwable $e) {
+                return $carry; // skip bad dates
+            }
+        }, 0);
+        $avgCycleTimeDays = $completedWithDates->count() > 0 ? round($sumCycleDays / $completedWithDates->count(), 1) : 0;
+
+        // Pending documents (awaiting approval)
+        $pendingDocumentsCount = Document::where('approval_status', 'pending')->count();
+
+        // Unread notifications count (query database to avoid dynamic method warnings)
+        $unreadNotificationsCount = 0;
+        if ($user instanceof User) {
+            try {
+                $unreadNotificationsCount = DatabaseNotification::where('notifiable_id', $user->id)
+                    ->where('notifiable_type', User::class)
+                    ->whereNull('read_at')
+                    ->count();
+            } catch (\Throwable $e) {
+                $unreadNotificationsCount = 0;
+            }
+        }
+
+        // Monthly PR trend (last 12 months) — DB agnostic
+        $startMonth = Carbon::now()->subMonths(11)->startOfMonth();
+        $connectionName = config('database.default');
+        $driver = config("database.connections.$connectionName.driver");
+        $dateExpr = null;
+        switch ($driver) {
+            case 'pgsql':
+                $dateExpr = "to_char(created_at, 'YYYY-MM')";
+                break;
+            case 'mysql':
+            case 'mariadb':
+                $dateExpr = "DATE_FORMAT(created_at, '%Y-%m')";
+                break;
+            case 'sqlite':
+            default:
+                $dateExpr = "strftime('%Y-%m', created_at)";
+                break;
+        }
+
+        $rawMonthly = PurchaseRequest::selectRaw("$dateExpr as ym, COUNT(*) as total")
+            ->where('created_at', '>=', $startMonth)
+            ->groupBy('ym')
+            ->orderBy('ym')
+            ->pluck('total', 'ym');
+
+        $prMonthlyLabels = [];
+        $prMonthlyData = [];
+        for ($i = 11; $i >= 0; $i--) {
+            $date = Carbon::now()->subMonths($i);
+            $monthKey = $date->format('Y-m');
+            $prMonthlyLabels[] = $date->format('M Y');
+            $prMonthlyData[] = (int) ($rawMonthly[$monthKey] ?? 0);
+        }
+
         // Get completed PRs
         $completedPRs = PurchaseRequest::where("status", "Completed")
             ->when($search, fn($query) => $query->where("pr_number", "like", "%$search%"))
@@ -212,6 +290,18 @@ class DashboardController extends Controller
             'alternativeCount',
             'competitiveCount',
             'consolidatedCount'
+            , 'pendingCount'
+            , 'completedCount'
+            , 'documentsCount'
+            , 'usersCount'
+            , 'departmentsCount'
+            , 'todayNewPRs'
+            , 'thisMonthPRs'
+            , 'avgCycleTimeDays'
+            , 'pendingDocumentsCount'
+            , 'unreadNotificationsCount'
+            , 'prMonthlyLabels'
+            , 'prMonthlyData'
         ));
     }
 

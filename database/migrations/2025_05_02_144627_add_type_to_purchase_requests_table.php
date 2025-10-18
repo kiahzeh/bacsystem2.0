@@ -11,18 +11,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('purchase_requests', function (Blueprint $table) {
-            $table->enum('type', ['alternative', 'competitive'])
-                  ->default('alternative') // 👈 required for SQLite
-                  ->after('status');
-        });
+        if (!Schema::hasColumn('purchase_requests', 'type')) {
+            Schema::table('purchase_requests', function (Blueprint $table) {
+                $table->enum('type', ['alternative', 'competitive'])
+                      ->default('alternative')
+                      ->after('status');
+            });
+        }
     }
     
     public function down(): void
     {
-        Schema::table('purchase_requests', function (Blueprint $table) {
-            $table->dropColumn('type');
-        });
+        if (Schema::hasColumn('purchase_requests', 'type')) {
+            Schema::table('purchase_requests', function (Blueprint $table) {
+                $table->dropColumn('type');
+            });
+        }
     }
     
 

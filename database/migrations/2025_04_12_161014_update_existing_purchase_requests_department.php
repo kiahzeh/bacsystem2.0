@@ -11,6 +11,10 @@ return new class extends Migration {
      */
     public function up(): void
     {
+        // If the legacy 'department' column is already removed, skip this migration
+        if (!Schema::hasColumn('purchase_requests', 'department')) {
+            return;
+        }
         // First, make sure we have a default department
         $defaultDept = DB::table('departments')->first();
         if (!$defaultDept) {
@@ -41,10 +45,12 @@ return new class extends Migration {
                     ]);
         }
 
-        // Now we can safely drop the old department column
-        Schema::table('purchase_requests', function (Blueprint $table) {
-            $table->dropColumn('department');
-        });
+        // Now we can safely drop the old department column if it still exists
+        if (Schema::hasColumn('purchase_requests', 'department')) {
+            Schema::table('purchase_requests', function (Blueprint $table) {
+                $table->dropColumn('department');
+            });
+        }
     }
 
     /**
@@ -52,9 +58,11 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('purchase_requests', function (Blueprint $table) {
-            $table->string('department')->nullable();
-        });
+        if (!Schema::hasColumn('purchase_requests', 'department')) {
+            Schema::table('purchase_requests', function (Blueprint $table) {
+                $table->string('department')->nullable();
+            });
+        }
 
         // Restore the department names from department_id
         $purchaseRequests = DB::table('purchase_requests')->get();

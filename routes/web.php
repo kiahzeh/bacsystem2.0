@@ -9,8 +9,10 @@ use App\Http\Controllers\TestController;
 use App\Http\Controllers\NotificationTestController;
 use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\DashboardController;
 use App\Models\PurchaseRequest;
+use App\Models\User;
 use App\Http\Controllers\ConsolidatedRequestController;
 use App\Http\Controllers\ConsolidateController;
 use App\Http\Controllers\DocumentController;
@@ -37,8 +39,12 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::post('/consolidation/store', [ConsolidateController::class, 'store'])->name('consolidation.store');
-Route::get('/consolidation', [ConsolidateController::class, 'index'])->name('consolidation.index');
+// Lightweight liveness endpoint (no auth, always 200)
+Route::get('/health', function () {
+    return response()->json(['status' => 'ok'], 200);
+});
+
+// Consolidation handled by DashboardController to align with dashboard form
 
 // Dashboard Route
 Route::get('/dashboard', [DashboardController::class, 'index'])
@@ -123,68 +129,64 @@ Route::post('/purchase-requests/{purchaseRequest}/workflow/reorder-steps', [App\
 
 Route::get('/search/pr', [App\Http\Controllers\PurchaseRequestController::class, 'ajaxSearch'])->name('search.pr');
 
-// Test notification route
-Route::get('/test-notification', function () {
-    $user = auth()->user();
-    $user->notify(new \App\Notifications\NewPurchaseRequestCreated(\App\Models\PurchaseRequest::first()));
-    return redirect()->back()->with('success', 'Test notification sent!');
-})->name('test.notification');
+// Test and debug notification routes (require auth and use typed User)
+Route::middleware('auth')->group(function () {
+    Route::get('/test-notification', function () {
+        $user = User::findOrFail(auth()->id());
+        $user->notify(new \App\Notifications\NewPurchaseRequestCreated(PurchaseRequest::first()));
+        return redirect()->back()->with('success', 'Test notification sent!');
+    })->name('test.notification');
 
-// Test notification API route
-Route::get('/test-notification-api', function () {
-    $user = auth()->user();
-    $notifications = $user->notifications()->take(10)->get()->map(function ($notification) {
-        return [
-            'id' => $notification->id,
-            'message' => $notification->data['message'] ?? 'Notification',
-            'created_at' => $notification->created_at->diffForHumans(),
-            'read' => !is_null($notification->read_at),
-            'action_url' => $notification->data['action_url'] ?? null,
-        ];
-    });
-    
-    return response()->json([
-        'notifications' => $notifications,
-        'unreadCount' => $user->unreadNotifications()->count(),
-        'totalCount' => $user->notifications()->count(),
-    ]);
-})->name('test.notification.api');
+    Route::get('/test-notification-api', function () {
+        $user = User::findOrFail(auth()->id());
+        $notifications = $user->notifications()->take(10)->get()->map(function ($notification) {
+            return [
+                'id' => $notification->id,
+                'message' => $notification->data['message'] ?? 'Notification',
+                'created_at' => $notification->created_at->diffForHumans(),
+                'read' => !is_null($notification->read_at),
+                'action_url' => $notification->data['action_url'] ?? null,
+            ];
+        });
+        
+        return response()->json([
+            'notifications' => $notifications,
+            'unreadCount' => $user->notifications()->whereNull('read_at')->count(),
+            'totalCount' => $user->notifications()->count(),
+        ]);
+    })->name('test.notification.api');
 
-// Debug notifications route
-Route::get('/debug-notifications', function () {
-    $user = auth()->user();
-    if (!$user) {
-        return response()->json(['error' => 'No authenticated user'], 401);
-    }
-    
-    $allNotifications = $user->notifications()->take(5)->get();
-    $unreadNotifications = $user->unreadNotifications()->take(5)->get();
-    
-    return response()->json([
-        'user_id' => $user->id,
-        'user_name' => $user->name,
-        'total_notifications' => $user->notifications()->count(),
-        'unread_notifications' => $user->unreadNotifications()->count(),
-        'all_notifications' => $allNotifications->map(function ($n) {
-            return [
-                'id' => $n->id,
-                'type' => $n->type,
-                'data' => $n->data,
-                'read_at' => $n->read_at,
-                'created_at' => $n->created_at->toISOString(),
-            ];
-        }),
-        'unread_notifications' => $unreadNotifications->map(function ($n) {
-            return [
-                'id' => $n->id,
-                'type' => $n->type,
-                'data' => $n->data,
-                'read_at' => $n->read_at,
-                'created_at' => $n->created_at->toISOString(),
-            ];
-        }),
-    ]);
-})->name('debug.notifications');
+    Route::get('/debug-notifications', function () {
+        $user = User::findOrFail(auth()->id());
+        $allNotifications = $user->notifications()->take(5)->get();
+        $unreadNotifications = $user->notifications()->whereNull('read_at')->take(5)->get();
+        
+        return response()->json([
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'total_notifications' => $user->notifications()->count(),
+            'unread_notifications' => $user->notifications()->whereNull('read_at')->count(),
+            'all_notifications' => $allNotifications->map(function ($n) {
+                return [
+                    'id' => $n->id,
+                    'type' => $n->type,
+                    'data' => $n->data,
+                    'read_at' => $n->read_at,
+                    'created_at' => $n->created_at->toISOString(),
+                ];
+            }),
+            'unread_notifications' => $unreadNotifications->map(function ($n) {
+                return [
+                    'id' => $n->id,
+                    'type' => $n->type,
+                    'data' => $n->data,
+                    'read_at' => $n->read_at,
+                    'created_at' => $n->created_at->toISOString(),
+                ];
+            }),
+        ]);
+    })->name('debug.notifications');
+});
 
 // User search API
 Route::get('/api/users/search', [App\Http\Controllers\UserController::class, 'search'])->name('api.users.search');

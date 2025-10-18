@@ -8,15 +8,19 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::table('purchase_requests', function (Blueprint $table) {
-            $table->json('enabled_steps')->nullable();
-        });
+        if (!Schema::hasColumn('purchase_requests', 'enabled_steps')) {
+            Schema::table('purchase_requests', function (Blueprint $table) {
+                $table->json('enabled_steps')->nullable();
+            });
+        }
     }
 
     public function down()
     {
-        Schema::table('purchase_requests', function (Blueprint $table) {
-            $table->dropColumn('enabled_steps');
-        });
+        if (Schema::hasColumn('purchase_requests', 'enabled_steps')) {
+            Schema::table('purchase_requests', function (Blueprint $table) {
+                $table->dropColumn('enabled_steps');
+            });
+        }
     }
-}; 
+};

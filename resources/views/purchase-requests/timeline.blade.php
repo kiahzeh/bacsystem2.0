@@ -59,26 +59,28 @@
                     <div>
                         <h3 class="text-lg font-medium text-white glass-heading mb-4">Current Status</h3>
                         <div class="space-y-4">
-                        <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium glass-badge
-                            @switch($purchaseRequest->status)
-                                @case('ATP') bg-purple-500/20 text-purple-200 @break
-                                @case('Procurement') bg-blue-500/20 text-blue-200 @break
-                                @case('Posting in PhilGEPS') bg-indigo-500/20 text-indigo-200 @break
-                                @case('Pre-Bid') bg-cyan-500/20 text-cyan-200 @break
-                                @case('Bid Opening') bg-teal-500/20 text-teal-200 @break
-                                @case('Bid Evaluation') bg-emerald-500/20 text-emerald-200 @break
-                                @case('Post Qualification') bg-green-500/20 text-green-200 @break
-                                @case('Confirmation on Approval') bg-lime-500/20 text-lime-200 @break
-                                @case('Issuance of Notice of Award') bg-yellow-500/20 text-yellow-200 @break
-                                @case('Purchase Order') bg-amber-500/20 text-amber-200 @break
-                                @case('Contract') bg-orange-500/20 text-orange-200 @break
-                                @case('Notice to Proceed') bg-red-500/20 text-red-200 @break
-                                    @case('Posting of Award in PhilGEPS') bg-pink-500/20 text-pink-200 @break
-                                    @case('Forward Purchase or Supply') bg-rose-500/20 text-rose-200 @break
-                                @default bg-gray-500/20 text-gray-200
-                            @endswitch">
+                        @php
+                            $statusClassMap = [
+                                'ATP' => 'bg-purple-500/20 text-purple-200',
+                                'Procurement' => 'bg-blue-500/20 text-blue-200',
+                                'Posting in PhilGEPS' => 'bg-indigo-500/20 text-indigo-200',
+                                'Pre-Bid' => 'bg-cyan-500/20 text-cyan-200',
+                                'Bid Opening' => 'bg-teal-500/20 text-teal-200',
+                                'Bid Evaluation' => 'bg-emerald-500/20 text-emerald-200',
+                                'Post Qualification' => 'bg-green-500/20 text-green-200',
+                                'Confirmation on Approval' => 'bg-lime-500/20 text-lime-200',
+                                'Issuance of Notice of Award' => 'bg-yellow-500/20 text-yellow-200',
+                                'Purchase Order' => 'bg-amber-500/20 text-amber-200',
+                                'Contract' => 'bg-orange-500/20 text-orange-200',
+                                'Notice to Proceed' => 'bg-red-500/20 text-red-200',
+                                'Posting of Award in PhilGEPS' => 'bg-pink-500/20 text-pink-200',
+                                'Forward Purchase or Supply' => 'bg-rose-500/20 text-rose-200',
+                            ];
+                            $statusClass = $statusClassMap[$purchaseRequest->status] ?? 'bg-gray-500/20 text-gray-200';
+                        @endphp
+                        <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium glass-badge {{ $statusClass }}">
                             {{ $purchaseRequest->status }}
-                            </div>
+                        </div>
                             
                             <!-- Progress Bar -->
                             <div class="w-full bg-gray-500/20 rounded-full h-2.5">
@@ -126,11 +128,11 @@
                 <!-- Workflow Management Section (Admin Only) -->
                 @if(auth()->user()->isAdmin())
                     <div class="mb-8 glassmorphism-card rounded-lg p-6 transition-all duration-300" 
-                         :class="{ 'ring-2 ring-blue-400/30 bg-blue-500/5': workflowOpen }"
+                         x-bind:class="workflowOpen ? 'ring-2 ring-blue-400/30 bg-blue-500/5' : ''"
                          x-data="{ workflowOpen: false }"
                          x-init="workflowOpen = localStorage.getItem('workflowOpen') === 'true'"
-                         @workflow-open-changed.window="localStorage.setItem('workflowOpen', workflowOpen)">
-                        <div class="flex items-center justify-between cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-colors duration-200" @click="workflowOpen = !workflowOpen">
+                         x-effect="localStorage.setItem('workflowOpen', workflowOpen)">
+                        <div class="flex items-center justify-between cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-colors duration-200" x-on:click="workflowOpen = !workflowOpen">
                             <h3 class="text-lg font-bold text-white glass-heading flex items-center">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
@@ -140,19 +142,14 @@
                             <div class="flex items-center space-x-2">
                                 <span class="text-white/70 text-sm" x-text="workflowOpen ? 'Click to collapse' : 'Click to expand'"></span>
                                 <svg class="w-5 h-5 text-white/70 transition-transform duration-200" 
-                                     :class="{ 'rotate-180': workflowOpen }"
+                                     x-bind:class="workflowOpen ? 'rotate-180' : ''"
                                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                 </svg>
                             </div>
                         </div>
                         
-                        <div x-show="workflowOpen" x-transition:enter="transition ease-out duration-200" 
-                             x-transition:enter-start="opacity-0 transform -translate-y-2" 
-                             x-transition:enter-end="opacity-100 transform translate-y-0"
-                             x-transition:leave="transition ease-in duration-150" 
-                             x-transition:leave-start="opacity-100 transform translate-y-0" 
-                             x-transition:leave-end="opacity-0 transform -translate-y-2">
+                        <div x-show="workflowOpen" x-transition.duration.200ms.opacity.scale x-cloak>
                             <p class="text-white/70 text-sm mb-4 mt-4">
                                 Add or remove workflow steps specific to this purchase request. Changes only affect this PR.
                             </p>
@@ -203,26 +200,30 @@
 
                         <!-- SortableJS CDN for Workflow Steps -->
                         <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+                        @if(auth()->user()->isAdmin())
                         <script>
                         document.addEventListener('DOMContentLoaded', function () {
-                            @if(auth()->user()->isAdmin())
-                            new Sortable(document.getElementById('workflow-steps-list'), {
+                            const list = document.getElementById('workflow-steps-list');
+                            if (!list) return;
+                            new Sortable(list, {
                                 animation: 150,
-                                onEnd: function (evt) {
-                                    let order = Array.from(document.querySelectorAll('.workflow-step-item')).map(el => el.dataset.index);
-                                    fetch('{{ route('purchase-requests.workflow.reorder-steps', $purchaseRequest) }}', {
+                                onEnd: function () {
+                                    const order = Array.from(document.querySelectorAll('.workflow-step-item')).map(el => el.dataset.index);
+                                    const reorderUrl = '{{ route('purchase-requests.workflow.reorder-steps', $purchaseRequest) }}';
+                                    fetch(reorderUrl, {
                                         method: 'POST',
                                         headers: {
                                             'Content-Type': 'application/json',
+                                            'Accept': 'application/json',
                                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
                                         },
-                                        body: JSON.stringify({order: order})
+                                        body: JSON.stringify({ order: order })
                                     });
                                 }
                             });
-                            @endif
                         });
                         </script>
+                        @endif
 
                         <!-- Reset to Default -->
                         <div class="border-t border-white/20 pt-4">
@@ -249,6 +250,9 @@
                                 $statusHistory = $purchaseRequest->statusHistory()->where('status', $status)->first();
                                 $requiredDocuments = $purchaseRequest->getRequiredDocuments($status);
                                 $uploadedDocuments = $purchaseRequest->documents()->where('status', $status)->get();
+                                $pendingDocs = $purchaseRequest->getPendingDocumentsForStep($status);
+                                $rejectedDocs = $purchaseRequest->getRejectedDocumentsForStep($status);
+                                $docsApproved = $purchaseRequest->areDocumentsApprovedForStep($status);
                             @endphp
                             
                             <div class="relative">
@@ -272,13 +276,33 @@
                                                             <div class="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center">
                                                                 <span class="text-yellow-900 text-xs font-bold">A</span>
                                                             </div>
+                                                            @if($uploadedDocuments->count() > 0)
+                                                                <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-yellow-400/80 rounded-full flex items-center justify-center" title="{{ $uploadedDocuments->count() }} document(s) uploaded">
+                                                                    <svg class="w-3 h-3 text-yellow-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                                    </svg>
+                                                                </div>
+                                                            @endif
                                                         </div>
                                                     @else
                                                         <!-- Completed Step -->
-                                                        <div class="w-16 h-16 rounded-full bg-green-500/20 border-2 border-green-400 flex items-center justify-center">
+                                                        <div class="w-16 h-16 rounded-full bg-green-500/20 border-2 border-green-400 flex items-center justify-center relative">
                                                             <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                                             </svg>
+                                                            @if($docsApproved)
+                                                                <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400 rounded-full flex items-center justify-center" title="Documents approved">
+                                                                    <svg class="w-3 h-3 text-green-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                                    </svg>
+                                                                </div>
+                                                            @elseif($uploadedDocuments->count() > 0)
+                                                                <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400/70 rounded-full flex items-center justify-center" title="{{ $uploadedDocuments->count() }} document(s) uploaded">
+                                                                    <svg class="w-3 h-3 text-green-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                                    </svg>
+                                                                </div>
+                                                            @endif
                                                         </div>
                                                     @endif
                                                 @elseif($isCurrentStatus)
@@ -288,11 +312,37 @@
                                                         <div class="absolute -top-1 -right-1 w-6 h-6 bg-orange-400 rounded-full flex items-center justify-center">
                                                             <span class="text-white text-xs font-bold">{{ $index + 1 }}</span>
                                                         </div>
+                                                        @if($rejectedDocs->count() > 0)
+                                                            <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-red-400 rounded-full flex items-center justify-center" title="{{ $rejectedDocs->count() }} rejected document(s)">
+                                                                <svg class="w-3 h-3 text-red-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                                </svg>
+                                                            </div>
+                                                        @elseif($pendingDocs->count() > 0)
+                                                            <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center" title="{{ $pendingDocs->count() }} pending document(s)">
+                                                                <svg class="w-3 h-3 text-yellow-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                                                </svg>
+                                                            </div>
+                                                        @elseif($docsApproved)
+                                                            <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400 rounded-full flex items-center justify-center" title="Documents approved">
+                                                                <svg class="w-3 h-3 text-green-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                                </svg>
+                                                            </div>
+                                                        @endif
                                                     </div>
                                                 @else
                                                     <!-- Future Step -->
-                                                    <div class="w-16 h-16 rounded-full bg-gray-500/20 border-2 border-gray-400/50 flex items-center justify-center">
+                                                    <div class="w-16 h-16 rounded-full bg-gray-500/20 border-2 border-gray-400/50 flex items-center justify-center relative">
                                                         <span class="text-gray-400 text-lg font-bold">{{ $index + 1 }}</span>
+                                                        @if(count($requiredDocuments) > 0)
+                                                            <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-gray-400/60 rounded-full flex items-center justify-center" title="{{ count($requiredDocuments) }} document(s) required">
+                                                                <svg class="w-3 h-3 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                                </svg>
+                                                            </div>
+                                                        @endif
                                                     </div>
                                                 @endif
                                             </div>
@@ -711,4 +761,4 @@
             }
         });
     </script>
-</x-app-layout> 
+</x-app-layout>
