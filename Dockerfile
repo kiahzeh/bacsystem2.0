@@ -55,7 +55,7 @@ WORKDIR /var/www/html
 # Leverage Composer cache and layer caching: install deps before app copy
 COPY composer.json composer.lock ./
 RUN --mount=type=cache,id=${CACHE_KEY}-composer-cache,target=/root/.composer/cache \
-    composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
+    composer install --no-dev --optimize-autoloader
 
 # Copy application code
 COPY . .
