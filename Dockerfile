@@ -3,14 +3,14 @@
 # ---- ASSETS (Vite) ----
 FROM node:20-alpine AS assets
 WORKDIR /app
-ARG CACHE_KEY
-ENV CACHE_KEY=${CACHE_KEY}
+ARG RAILWAY_SERVICE_ID
+ENV RAILWAY_SERVICE_ID=${RAILWAY_SERVICE_ID}
 
 # Only copy package manifests first to leverage layer caching
 COPY package.json package-lock.json ./
 
-# Cache npm downloads between builds (explicit cache id prefixed with cache key)
-RUN --mount=type=cache,id=${CACHE_KEY}-npm-cache,target=/root/.npm npm ci --no-audit --no-fund
+# Cache npm downloads between builds (Railway requires cache id prefixed with s/<service-id>)
+RUN --mount=type=cache,id=s/${RAILWAY_SERVICE_ID}-npm-cache,target=/root/.npm npm ci --no-audit --no-fund
 
 # Copy only what build needs
 COPY vite.config.js postcss.config.js tailwind.config.js ./
@@ -18,13 +18,13 @@ COPY resources ./resources
 COPY public ./public
 
 ENV NODE_ENV=production
-# Use cache during build too (explicit cache id prefixed with cache key)
-RUN --mount=type=cache,id=${CACHE_KEY}-npm-cache,target=/root/.npm npm run build
+# Use cache during build too
+RUN --mount=type=cache,id=s/${RAILWAY_SERVICE_ID}-npm-cache,target=/root/.npm npm run build
 
 # ---- RUNTIME (Apache + PHP) ----
 FROM php:8.2-apache
-ARG CACHE_KEY
-ENV CACHE_KEY=${CACHE_KEY}
+ARG RAILWAY_SERVICE_ID
+ENV RAILWAY_SERVICE_ID=${RAILWAY_SERVICE_ID}
 
 # System libs for PHP extensions
 RUN apt-get update \
@@ -56,7 +56,7 @@ WORKDIR /var/www/html
 
 # Leverage Composer cache and layer caching: install deps before app copy
 COPY composer.json composer.lock ./
-RUN --mount=type=cache,id=${CACHE_KEY}-composer-cache,target=/root/.composer/cache \
+RUN --mount=type=cache,id=s/${RAILWAY_SERVICE_ID}-composer-cache,target=/root/.composer/cache \
     composer install --no-dev --optimize-autoloader
 
 # Copy application code
