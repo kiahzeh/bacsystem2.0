@@ -24,3 +24,4 @@ vendor
 storage/logs
 storage/framework/*
 public/storage
+public/hot

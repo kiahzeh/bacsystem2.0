@@ -29,6 +29,7 @@ Thumbs.db
 
 # Vite / build outputs
 /public/build
+/public/hot
 /.vercel
 /.next
 
