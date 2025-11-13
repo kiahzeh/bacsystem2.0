@@ -42,14 +42,21 @@ class UserSeeder extends Seeder
         );
     }
 
-    // ✅ Admin user
+    // ✅ Admin user from env, prefer Admin department
+    $adminEmail = env('ADMIN_EMAIL', 'admin@example.com');
+    $adminPassword = env('ADMIN_PASSWORD', 'password');
+    $adminName = env('ADMIN_NAME', 'Admin User');
+
+    $adminDeptId = Department::where('name', 'Admin')->value('id') ?? ($departments[0] ?? null);
+
     User::updateOrCreate(
-        ['email' => 'admin@example.com'],
+        ['email' => $adminEmail],
         [
-            'name' => 'Admin User',
-            'password' => Hash::make('password'),
-            'department_id' => $namedDepartments->random()->id ?? $departments[0],
+            'name' => $adminName,
+            'password' => Hash::make($adminPassword),
+            'department_id' => $adminDeptId ?? ($namedDepartments->random()->id ?? $departments[0]),
             'role' => 'admin',
+            'is_admin' => true,
             'email_verified_at' => now(),
         ]
     );

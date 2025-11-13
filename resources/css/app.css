@@ -29,7 +29,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, rgba(30, 58, 138, 0.1), rgba(30, 64, 175, 0.1));
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(37, 99, 235, 0.12));
     pointer-events: none;
 }
 
@@ -56,40 +56,40 @@
 }
 
 .glassmorphism-button {
-    background: rgba(30, 58, 138, 0.8);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(30, 58, 138, 0.3);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.85), rgba(37, 99, 235, 0.85));
+    backdrop-filter: saturate(160%) blur(10px);
+    border: 1px solid rgba(59, 130, 246, 0.35);
     color: white;
     font-weight: 600;
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
     transition: all 0.2s ease-in-out;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .glassmorphism-button:hover {
-    background: rgba(30, 58, 138, 0.9);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(37, 99, 235, 0.95));
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
 }
 
 /* Navy blue glassmorphism variant */
 .glassmorphism-navy {
-    background: rgba(30, 58, 138, 0.8);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(30, 58, 138, 0.3);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.85), rgba(37, 99, 235, 0.85));
+    backdrop-filter: saturate(160%) blur(10px);
+    border: 1px solid rgba(59, 130, 246, 0.35);
     color: white;
     font-weight: 600;
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
     transition: all 0.2s ease-in-out;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .glassmorphism-navy:hover {
-    background: rgba(30, 58, 138, 0.9);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(37, 99, 235, 0.95));
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
 }
 
 .glassmorphism-button-secondary {
@@ -184,26 +184,30 @@
 
 /* Dark mode glassmorphism overrides */
 .dark .glassmorphism-card {
-    background: rgba(24, 24, 32, 0.45);
-    border: 1px solid rgba(80, 80, 120, 0.25);
-    box-shadow: 0 8px 32px 0 rgba(20, 20, 40, 0.45);
+    background: rgba(10, 15, 26, 0.6);
+    backdrop-filter: saturate(180%) blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 32px 0 rgba(8, 12, 20, 0.55);
     color: #fff;
 }
 
 .dark .glassmorphism-navbar {
-    background: rgba(24, 24, 32, 0.7);
-    border-bottom: 1px solid rgba(80, 80, 120, 0.25);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    background: rgba(10, 15, 26, 0.7);
+    backdrop-filter: saturate(180%) blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.35);
 }
 
 .dark .glassmorphism-dropdown {
-    background: rgba(24, 24, 32, 0.7);
-    border: 1px solid rgba(80, 80, 120, 0.25);
-    box-shadow: 0 8px 32px rgba(20, 20, 40, 0.45);
+    background: rgba(10, 15, 26, 0.7);
+    backdrop-filter: saturate(180%) blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 32px rgba(8, 12, 20, 0.55);
 }
 
 .dark .glassmorphism-input {
-    background: rgba(40, 40, 60, 0.85);
+    background: rgba(10, 15, 26, 0.85);
     color: #fff;
     border: 1px solid rgba(80, 80, 120, 0.25);
 }
@@ -268,4 +272,64 @@
 .light .nav-link-glass.active {
     color: #1e3a8a !important;
     background: rgba(30, 58, 138, 0.15);
+}
+
+/* Global Dark Mode Typography Overrides */
+.dark body {
+    color: #e5e7eb; /* gray-200 for good contrast on dark */
+}
+
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+    color: #ffffff;
+}
+
+.dark p, .dark li, .dark span, .dark small, .dark label, .dark th, .dark td {
+    color: #e5e7eb;
+}
+
+/* Links in dark mode */
+.dark a {
+    color: #93c5fd; /* blue-300 */
+}
+.dark a:hover {
+    color: #bfdbfe; /* blue-200 */
+}
+
+/* Placeholders in dark mode */
+.dark input::placeholder,
+.dark textarea::placeholder {
+    color: #9ca3af; /* gray-400 */
+    opacity: 0.9;
+}
+
+/* Common custom classes seen in templates */
+.dark .glass-card {
+    color: #e5e7eb;
+}
+.dark .glass-heading {
+    color: #ffffff;
+}
+.dark .glass-text {
+    color: #e5e7eb;
+}
+
+/* Tables in dark mode */
+.dark table {
+    color: #e5e7eb;
+}
+
+/* Form labels and helper text */
+.dark .form-label,
+.dark .form-help,
+.dark .text-muted {
+    color: #cbd5e1; /* slate-300 */
+}
+
+.glass-text {
+    color: rgba(255, 255, 255, 0.92);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.glass-table-text {
+    color: rgba(255, 255, 255, 0.88);
 }

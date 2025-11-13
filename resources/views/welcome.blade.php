@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bid and Award System</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen text-white bg-cover bg-center bg-no-repeat relative" style="background-image: url('/images/buksubg.jpg');">
     <!-- Overlay for readability -->
-    <div class="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/60"></div>
+    <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/55 to-black/70"></div>
 
     <!-- Top Bar -->
     <div class="relative z-10 flex items-center justify-between px-6 py-4">

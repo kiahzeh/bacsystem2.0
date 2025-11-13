@@ -26,23 +26,23 @@ class EnvCheck extends Command
 
         $issues = [];
 
-        $appKey = env('APP_KEY');
+        $appKey = config('app.key');
         if (empty($appKey)) {
             $issues[] = 'APP_KEY is missing.';
         }
 
-        $appEnv = env('APP_ENV');
+        $appEnv = config('app.env');
         if (empty($appEnv)) {
             $issues[] = 'APP_ENV is not set.';
         }
 
-        $dbConnection = env('DB_CONNECTION');
+        $dbConnection = config('database.default');
         if (empty($dbConnection)) {
             $issues[] = 'DB_CONNECTION is not set.';
         }
 
         $databaseUrl = env('DATABASE_URL');
-        $dbSslMode = env('DB_SSLMODE');
+        $dbSslMode = config('database.connections.pgsql.sslmode') ?? env('DB_SSLMODE');
 
         // Prefer DATABASE_URL on platforms like Railway
         if (empty($databaseUrl)) {

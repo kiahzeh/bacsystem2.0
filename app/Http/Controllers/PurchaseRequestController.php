@@ -32,7 +32,7 @@ class PurchaseRequestController extends Controller
         $query = PurchaseRequest::with(['user', 'department']);
 
         // If user is not an admin, only show PRs from their department
-        if (!auth()->user()->isAdmin()) {
+        if (!(auth()->user() && auth()->user()->role === 'admin')) {
             $query->where('department_id', auth()->user()->department_id);
         }
 
@@ -58,7 +58,7 @@ class PurchaseRequestController extends Controller
         $this->authorize('create', PurchaseRequest::class);
     
         // If user is not an admin, force their department_id
-        if (!auth()->user()->isAdmin()) {
+        if (!(auth()->user() && auth()->user()->role === 'admin')) {
             $request->merge([
                 'department_id' => auth()->user()->department_id,
             ]);
@@ -85,30 +85,26 @@ class PurchaseRequestController extends Controller
             'user_id' => 'required|exists:users,id',
         ]);
 
+        // Normalize funding
         $funding = $request->input('funding') === 'Others'
             ? $request->input('custom_funding')
             : $request->input('funding');
+        $validated['funding'] = $funding;
 
-        $request->merge(['funding' => $funding]);
-
-        // Handle custom mode of procurement
+        // Normalize mode of procurement
         $modeOfProcurement = $request->input('mode_of_procurement') === 'Others'
             ? $request->input('custom_mode_of_procurement')
             : $request->input('mode_of_procurement');
+        $validated['mode_of_procurement'] = $modeOfProcurement;
 
-        $request->merge(['mode_of_procurement' => $modeOfProcurement]);
-
-        // Handle custom category
+        // Normalize category
         $category = $request->input('category') === 'Others'
             ? $request->input('custom_category')
             : $request->input('category');
-
-        $request->merge(['category' => $category]);
+        $validated['category'] = $category;
     
-        // Remove pr_number auto-generation logic
+        // Create PR with normalized values
         $purchaseRequest = PurchaseRequest::create($validated);
-
-        // Remove $purchaseRequest->update(['pr_number' => $prNumber]);
         
         // Initialize workflow steps for new purchase request
         $defaultSteps = $purchaseRequest->getDefaultWorkflowSteps();
@@ -168,22 +164,20 @@ class PurchaseRequestController extends Controller
             'remarks' => 'nullable|string',
         ]);
 
-        // Handle custom mode of procurement
+        // Normalize mode of procurement
         $modeOfProcurement = $request->input('mode_of_procurement') === 'Others'
             ? $request->input('custom_mode_of_procurement')
             : $request->input('mode_of_procurement');
-
         $validated['mode_of_procurement'] = $modeOfProcurement;
 
-        // Handle custom category
+        // Normalize category
         $category = $request->input('category') === 'Others'
             ? $request->input('custom_category')
             : $request->input('category');
-
         $validated['category'] = $category;
 
         // If user is not an admin, force their department_id
-        if (!auth()->user()->isAdmin()) {
+        if (!(auth()->user() && auth()->user()->role === 'admin')) {
             $validated['department_id'] = auth()->user()->department_id;
         }
 
@@ -236,31 +230,6 @@ class PurchaseRequestController extends Controller
             ->with('success', 'Purchase request updated successfully.');
     }
 
-    /**
-     * Show delete confirmation page.
-     */
-    public function deleteConfirm(PurchaseRequest $purchaseRequest)
-    {
-        $this->authorize('delete', $purchaseRequest);
-        return view('purchase-requests.delete-confirm', compact('purchaseRequest'));
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(PurchaseRequest $purchaseRequest)
-    {
-        $this->authorize('delete', $purchaseRequest);
-
-        $purchaseRequest->delete();
-
-        return redirect()->route('purchase-requests.index')
-            ->with('success', 'Purchase request deleted successfully.');
-    }
-
-    /**
-     * Display the timeline view for the purchase request.
-     */
     public function timeline(PurchaseRequest $purchaseRequest)
     {
         $this->authorize('view', $purchaseRequest);
@@ -286,77 +255,6 @@ class PurchaseRequestController extends Controller
         }
         
         return view('purchase-requests.timeline', compact('purchaseRequest', 'allStatuses'));
-    }
-
-    public function storeConsolidation(Request $request)
-    {
-        $request->validate([
-            'pr_ids' => 'required|array'
-        ]);
-
-        $cpr = Consolidate::create();
-        $cpr->purchaseRequests()->attach($request->pr_ids);
-
-        return redirect()->back()->with('success', 'CPR Created!');
-    }
-
-    public function competitiveList(Request $request)
-    {
-        $query = PurchaseRequest::with(['department'])
-            ->where('type', 'competitive');
-
-        // Apply search filter
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function($q) use ($search) {
-                $q->where('pr_number', 'like', "%{$search}%")
-                  ->orWhere('name', 'like', "%{$search}%");
-            });
-        }
-
-        // Apply status filter
-        if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
-        }
-
-        $purchaseRequests = $query->paginate(10);
-        $statuses = Process::orderBy('order')->pluck('name')->toArray();
-
-        return view('purchase-requests.competitive-list', compact('purchaseRequests', 'statuses'));
-    }
-
-    /**
-     * Upload a document for a specific step in the timeline.
-     */
-    public function uploadDocument(Request $request, PurchaseRequest $purchaseRequest)
-    {
-        $request->validate([
-            'document' => 'required|file|max:10240', // 10MB max
-            'status' => 'required|string'
-        ]);
-
-        $file = $request->file('document');
-        $originalFilename = $file->getClientOriginalName();
-        $filename = time() . '_' . $originalFilename;
-        
-        // Store the file
-        $path = $file->storeAs('documents', $filename, 'public');
-        
-        // Create document record
-        $document = $purchaseRequest->documents()->create([
-            'filename' => $filename,
-            'original_filename' => $originalFilename,
-            'path' => $path,
-            'status' => $request->status,
-            'uploaded_by' => auth()->id(),
-            'mime_type' => $file->getClientMimeType(),
-            'file_size' => $file->getSize(),
-        ]);
-
-        // Create notification for relevant users
-        $this->notifyDocumentUpload($purchaseRequest, $document);
-
-        return redirect()->back()->with('success', 'Document uploaded successfully.');
     }
 
     public function updateSteps(Request $request, PurchaseRequest $purchaseRequest)
@@ -394,59 +292,6 @@ class PurchaseRequestController extends Controller
         }
     }
 
-    public function ajaxSearch(Request $request)
-    {
-        $query = $request->input('q');
-        $results = PurchaseRequest::where('pr_number', 'like', "%$query%")
-            ->orWhere('name', 'like', "%$query%")
-            ->limit(10)
-            ->get(['id', 'pr_number', 'name', 'status']);
-        return response()->json($results);
-    }
-
-    public function addWorkflowStep(Request $request, PurchaseRequest $purchaseRequest)
-    {
-        $this->authorize('update', $purchaseRequest);
-        
-        $request->validate([
-            'step_name' => 'required|string|max:255',
-        ]);
-        
-        $stepName = $request->step_name;
-        $steps = $purchaseRequest->workflow_steps ?? [];
-        $steps[] = $stepName;
-        $purchaseRequest->workflow_steps = $steps;
-        $purchaseRequest->save();
-        
-        // Notify ALL users (except the creator) when a step is added
-        $allUsers = User::where('id', '!=', auth()->id())->get();
-        foreach ($allUsers as $user) {
-            $user->notify(new PurchaseRequestUpdated($purchaseRequest, $stepName, 'step_added'));
-        }
-        
-        return back()->with('success', 'Step added successfully.');
-    }
-
-    public function getAvailableProcesses()
-    {
-        // Get all available process templates from the processes table
-        return Process::orderBy('order')->pluck('name')->toArray();
-    }
-
-    public function confirmRemoveWorkflowStep(PurchaseRequest $purchaseRequest, $stepIndex)
-    {
-        $this->authorize('update', $purchaseRequest);
-        
-        $steps = $purchaseRequest->workflow_steps ?? [];
-        if (!isset($steps[$stepIndex])) {
-            return back()->with('error', 'Step not found.');
-        }
-        
-        $stepName = $steps[$stepIndex];
-        
-        return view('purchase-requests.confirm-remove-step', compact('purchaseRequest', 'stepIndex', 'stepName'));
-    }
-
     public function confirmSkipWorkflowStep(PurchaseRequest $purchaseRequest, $stepIndex)
     {
         $this->authorize('update', $purchaseRequest);
@@ -457,324 +302,260 @@ class PurchaseRequestController extends Controller
         }
         
         $stepName = $steps[$stepIndex];
+        $nextStep = $steps[$stepIndex + 1] ?? (in_array('Completed', $steps) ? 'Completed' : $stepName);
         
-        return view('purchase-requests.confirm-skip-step', compact('purchaseRequest', 'stepIndex', 'stepName'));
+        return view('purchase-requests.confirm-skip-step', compact('purchaseRequest', 'stepIndex', 'stepName', 'nextStep'));
     }
 
+    public function skipWorkflowStep(Request $request, PurchaseRequest $purchaseRequest, $stepIndex)
+    {
+        $this->authorize('update', $purchaseRequest);
+
+        $steps = $purchaseRequest->workflow_steps ?? [];
+        if (!isset($steps[$stepIndex])) {
+            return redirect()->route('purchase-requests.timeline', $purchaseRequest)
+                ->with('error', 'Step not found.');
+        }
+
+        $stepName = $steps[$stepIndex];
+        $oldStatus = $stepName;
+
+        // Guard: if this step was already skipped, do not re-skip
+        $existingStatusHistory = $purchaseRequest->statusHistory()->where('status', $stepName)->first();
+        if ($existingStatusHistory && $existingStatusHistory->is_skipped) {
+            return redirect()->route('purchase-requests.timeline', $purchaseRequest)
+                ->with('error', "Step '{$stepName}' was already skipped.");
+        }
+
+        // Mark the selected step as skipped in status history
+        $purchaseRequest->statusHistory()->updateOrCreate(
+            ['status' => $stepName],
+            [
+                'user_id' => auth()->id(),
+                'is_skipped' => true,
+                'completed_at' => now(),
+            ]
+        );
+
+        // If skipping the current step, advance to the next step
+        if ($purchaseRequest->status === $stepName) {
+            $nextIndex = $stepIndex + 1;
+            if ($nextIndex < count($steps)) {
+                $nextStep = $steps[$nextIndex];
+            } else {
+                // If there is no next step, keep current status or set to 'Completed' if present
+                $nextStep = in_array('Completed', $steps) ? 'Completed' : $stepName;
+            }
+
+            // Update PR status and timestamps
+            $purchaseRequest->status = $nextStep;
+            $purchaseRequest->last_modified_by = auth()->id();
+            $purchaseRequest->last_modified_at = now();
+            $purchaseRequest->save();
+
+            // Mark next step as started
+            $purchaseRequest->statusHistory()->updateOrCreate(
+                ['status' => $nextStep],
+                [
+                    'user_id' => auth()->id(),
+                    'started_at' => now(),
+                ]
+            );
+        } else {
+            // If skipping a non-current step, still update last modified metadata
+            $purchaseRequest->last_modified_by = auth()->id();
+            $purchaseRequest->last_modified_at = now();
+            $purchaseRequest->save();
+        }
+
+        // Notify all other users about the skipped step
+        $allUsers = User::where('id', '!=', auth()->id())->get();
+        foreach ($allUsers as $user) {
+            $user->notify(new PurchaseRequestUpdated($purchaseRequest, $oldStatus, 'step_skipped'));
+        }
+
+        return redirect()->route('purchase-requests.timeline', $purchaseRequest)
+            ->with('success', "Step '{$stepName}' has been skipped.");
+    }
+
+    // New: confirm advancing to the next workflow step
     public function confirmNextWorkflowStep(PurchaseRequest $purchaseRequest, $stepIndex)
     {
         $this->authorize('update', $purchaseRequest);
-        
+
         $steps = $purchaseRequest->workflow_steps ?? [];
-        if (!isset($steps[$stepIndex]) || $stepIndex >= count($steps) - 1) {
-            return back()->with('error', 'Cannot advance to next step.');
+        if (!isset($steps[$stepIndex])) {
+            return back()->with('error', 'Step not found.');
         }
-        
+
         $currentStep = $steps[$stepIndex];
-        $nextStep = $steps[$stepIndex + 1];
-        
+        $nextStep = $steps[$stepIndex + 1] ?? (in_array('Completed', $steps) ? 'Completed' : $currentStep);
+
         return view('purchase-requests.confirm-next-step', compact('purchaseRequest', 'stepIndex', 'currentStep', 'nextStep'));
     }
 
-    public function confirmResetWorkflowToDefault(PurchaseRequest $purchaseRequest)
+    // New: advance to the next workflow step
+    public function nextWorkflowStep(Request $request, PurchaseRequest $purchaseRequest, $stepIndex)
     {
         $this->authorize('update', $purchaseRequest);
-        
-        $currentSteps = $purchaseRequest->workflow_steps ?? [];
-        $defaultStepsData = $purchaseRequest->getDefaultWorkflowSteps();
-        $defaultSteps = array_keys($defaultStepsData); // Extract just the step names
-        
-        return view('purchase-requests.confirm-reset-to-default', compact('purchaseRequest', 'currentSteps', 'defaultSteps'));
-    }
 
-    public function removeWorkflowStep(PurchaseRequest $purchaseRequest, $stepIndex)
-    {
         $steps = $purchaseRequest->workflow_steps ?? [];
-        if (isset($steps[$stepIndex])) {
-            $stepName = $steps[$stepIndex];
-            array_splice($steps, $stepIndex, 1);
-            $purchaseRequest->workflow_steps = $steps;
-            $purchaseRequest->save();
-            
-            // Notify ALL users (except the creator) when a step is removed
-            $allUsers = User::where('id', '!=', auth()->id())->get();
-            foreach ($allUsers as $user) {
-                $user->notify(new PurchaseRequestUpdated($purchaseRequest, $stepName, 'step_removed'));
-            }
-            
-            return back()->with('success', 'Step removed successfully.');
+        if (!isset($steps[$stepIndex])) {
+            return redirect()->route('purchase-requests.timeline', $purchaseRequest)
+                ->with('error', 'Step not found.');
         }
-        return back()->with('error', 'Step not found.');
-    }
 
-    public function skipWorkflowStep(PurchaseRequest $purchaseRequest, $stepIndex)
-    {
-        $steps = $purchaseRequest->workflow_steps ?? [];
-        if (isset($steps[$stepIndex])) {
-            $stepName = $steps[$stepIndex];
-            
-            // Mark as skipped in status history with timestamps
-            $history = $purchaseRequest->statusHistory()->where('status', $stepName)->first();
-            if ($history) {
-                $history->is_skipped = true;
-                $history->started_at = $history->started_at ?? now();
-                $history->completed_at = now();
-                $history->save();
-            } else {
-                $purchaseRequest->statusHistory()->create([
-                    'status' => $stepName,
-                    'is_skipped' => true,
-                    'user_id' => auth()->id(),
-                    'started_at' => now(),
-                    'completed_at' => now(),
-                ]);
-            }
-            
-            // Notify ALL users (except the creator) when a step is skipped
-            $allUsers = User::where('id', '!=', auth()->id())->get();
-            foreach ($allUsers as $user) {
-                $user->notify(new PurchaseRequestUpdated($purchaseRequest, $stepName, 'step_skipped'));
-            }
-            
-            return back()->with('success', 'Step skipped successfully.');
-        }
-        return back()->with('error', 'Step not found.');
-    }
-
-    public function nextWorkflowStep(PurchaseRequest $purchaseRequest, $stepIndex)
-    {
-        $this->authorize('update', $purchaseRequest);
-        
-        $steps = $purchaseRequest->workflow_steps ?? [];
-        
-        // Ensure workflow_steps is properly initialized
-        if (empty($steps)) {
-            $steps = $purchaseRequest->getDefaultWorkflowSteps();
-            $purchaseRequest->workflow_steps = $steps;
-            $purchaseRequest->save();
-        }
-        
-        if (!isset($steps[$stepIndex]) || $stepIndex >= count($steps) - 1) {
-            return back()->with('error', 'Cannot advance to next step.');
-        }
-        
         $currentStep = $steps[$stepIndex];
-        $nextStep = $steps[$stepIndex + 1];
-        
-        // Check if all required documents for current step are approved
-        $requiredDocuments = $purchaseRequest->getRequiredDocuments($currentStep);
-        $uploadedDocuments = $purchaseRequest->documents()->where('status', $currentStep)->get();
-        
-        if ($requiredDocuments->count() > 0) {
-            $pendingDocuments = $uploadedDocuments->where('approval_status', 'pending');
-            $rejectedDocuments = $uploadedDocuments->where('approval_status', 'rejected');
-            
-            if ($pendingDocuments->count() > 0) {
-                return back()->with('error', 'Cannot advance to next step. Some documents are still pending approval.');
-            }
-            
-            if ($rejectedDocuments->count() > 0) {
-                return back()->with('error', 'Cannot advance to next step. Some documents have been rejected and need to be re-uploaded.');
-            }
-            
-            // Check if all required documents are uploaded and approved
-            foreach ($requiredDocuments as $requiredDoc) {
-                $uploadedDoc = $uploadedDocuments->where('original_filename', $requiredDoc)->first();
-                if (!$uploadedDoc || !$uploadedDoc->isApproved()) {
-                    return back()->with('error', "Cannot advance to next step. Required document '{$requiredDoc}' is not uploaded or not approved.");
-                }
-            }
-        }
-        
-        // Mark current step as completed with timestamp
+        $oldStatus = $currentStep;
+        $nextStep = $steps[$stepIndex + 1] ?? (in_array('Completed', $steps) ? 'Completed' : $currentStep);
+
+        // Mark current step as completed
         $purchaseRequest->statusHistory()->updateOrCreate(
             ['status' => $currentStep],
             [
                 'user_id' => auth()->id(),
-                'is_skipped' => false,
                 'completed_at' => now(),
             ]
         );
-        
-        // Mark next step as started with timestamp
-        $purchaseRequest->statusHistory()->updateOrCreate(
-            ['status' => $nextStep],
-            [
-                'user_id' => auth()->id(),
-                'is_skipped' => false,
-                'started_at' => now(),
-            ]
-        );
-        
-        // Update PR status to next step
+
+        // Advance status to next step
         $purchaseRequest->status = $nextStep;
         $purchaseRequest->last_modified_by = auth()->id();
         $purchaseRequest->last_modified_at = now();
         $purchaseRequest->save();
-        
-        // Notify ALL users (except the creator) when workflow is advanced
+
+        // Mark next step as started
+        $purchaseRequest->statusHistory()->updateOrCreate(
+            ['status' => $nextStep],
+            [
+                'user_id' => auth()->id(),
+                'started_at' => now(),
+            ]
+        );
+
+        // Notify other users of advancement
         $allUsers = User::where('id', '!=', auth()->id())->get();
         foreach ($allUsers as $user) {
-            $user->notify(new PurchaseRequestUpdated($purchaseRequest, $currentStep, 'status_advanced'));
+            $user->notify(new PurchaseRequestUpdated($purchaseRequest, $oldStatus, 'status_advanced'));
         }
-        
-        return back()->with('success', "Workflow advanced from '{$currentStep}' to '{$nextStep}' successfully.");
+
+        return redirect()->route('purchase-requests.timeline', $purchaseRequest)
+            ->with('success', "Advanced from '{$currentStep}' to '{$nextStep}'.");
     }
 
-    public function resetWorkflowToDefault(PurchaseRequest $purchaseRequest)
+    public function confirmRemoveWorkflowStep(PurchaseRequest $purchaseRequest, $stepIndex)
     {
         $this->authorize('update', $purchaseRequest);
-        
-        // Reset to default processes from the processes table
-        $defaultSteps = Process::orderBy('order')->pluck('name')->toArray();
-        $purchaseRequest->workflow_steps = $defaultSteps;
-        $purchaseRequest->save();
-        
-        // Notify ALL users (except the creator) when workflow is reset to default
-        $allUsers = User::where('id', '!=', auth()->id())->get();
-        foreach ($allUsers as $user) {
-            $user->notify(new PurchaseRequestUpdated($purchaseRequest, 'default', 'workflow_reset'));
+
+        $steps = $purchaseRequest->workflow_steps ?? [];
+        if (!isset($steps[$stepIndex])) {
+            return back()->with('error', 'Step not found.');
         }
-        
-        return back()->with('success', 'Workflow reset to default steps successfully.');
+
+        $stepName = $steps[$stepIndex];
+
+        return view('purchase-requests.confirm-remove-step', compact('purchaseRequest', 'stepIndex', 'stepName'));
     }
 
-    public function reorderWorkflowSteps(Request $request, PurchaseRequest $purchaseRequest)
+    public function removeWorkflowStep(Request $request, PurchaseRequest $purchaseRequest, $stepIndex)
     {
         $this->authorize('update', $purchaseRequest);
 
-        $request->validate([
-            'steps' => 'required|array',
-            'steps.*' => 'required|string'
-        ]);
+        $steps = $purchaseRequest->workflow_steps ?? [];
+        if (!isset($steps[$stepIndex])) {
+            return redirect()->route('purchase-requests.timeline', $purchaseRequest)
+                ->with('error', 'Step not found.');
+        }
 
-        $purchaseRequest->update([
-            'workflow_steps' => $request->steps
-        ]);
+        $stepName = $steps[$stepIndex];
+        $oldStatus = $stepName;
 
-        return response()->json(['success' => true]);
-    }
+        // Remove the step and reindex
+        array_splice($steps, (int)$stepIndex, 1);
+        $steps = array_values($steps);
+        $purchaseRequest->workflow_steps = $steps;
 
-    /**
-     * Export purchase request as PDF
-     */
-    public function export(PurchaseRequest $purchaseRequest)
-    {
-        $this->authorize('view', $purchaseRequest);
+        // Update metadata
+        $purchaseRequest->last_modified_by = auth()->id();
+        $purchaseRequest->last_modified_at = now();
 
-        // Load the relationship
-        $purchaseRequest->load('department');
+        // If the removed step is the current status, move to a sensible next step
+        if ($purchaseRequest->status === $stepName) {
+            $nextStep = $steps[$stepIndex] ?? (in_array('Completed', $steps) ? 'Completed' : ($steps[$stepIndex - 1] ?? $purchaseRequest->status));
+            $purchaseRequest->status = $nextStep;
+            $purchaseRequest->save();
 
-        // Generate PDF using the export template
-        $pdf = \PDF::loadView('purchase-requests.export', compact('purchaseRequest'));
-        
-        // Set paper size and orientation
-        $pdf->setPaper('A4', 'portrait');
-        
-        // Generate filename
-        $filename = 'PR-' . $purchaseRequest->pr_number . '-' . date('Y-m-d') . '.pdf';
-        
-        // Return PDF for download
-        return $pdf->download($filename);
-    }
-
-    /**
-     * Show completion form
-     */
-    public function showCompleteForm(PurchaseRequest $purchaseRequest)
-    {
-        $this->authorize('update', $purchaseRequest);
-        return view('purchase-requests.complete', compact('purchaseRequest'));
-    }
-
-    /**
-     * Complete purchase request
-     */
-    public function complete(Request $request, PurchaseRequest $purchaseRequest)
-    {
-        $this->authorize('update', $purchaseRequest);
-
-        $validated = $request->validate([
-            'completion_date' => 'required|date',
-            'final_amount' => 'required|numeric|min:0',
-            'awarded_vendor' => 'required|string|max:255',
-            'contract_number' => 'nullable|string|max:255',
-            'completion_notes' => 'nullable|string',
-        ]);
-
-        $oldStatus = $purchaseRequest->status;
-        
-        $purchaseRequest->update([
-            'status' => 'Completed',
-            'completion_date' => $validated['completion_date'],
-            'final_amount' => $validated['final_amount'],
-            'awarded_vendor' => $validated['awarded_vendor'],
-            'contract_number' => $validated['contract_number'],
-            'completion_notes' => $validated['completion_notes'],
-            'last_modified_by' => auth()->id(),
-            'last_modified_at' => now(),
-        ]);
-
-        // Mark all remaining workflow steps as completed
-        if ($oldStatus !== 'Completed') {
-            // Mark old status as completed
-            if ($oldStatus) {
+            if ($nextStep !== $oldStatus) {
                 $purchaseRequest->statusHistory()->updateOrCreate(
-                    ['status' => $oldStatus],
+                    ['status' => $nextStep],
                     [
                         'user_id' => auth()->id(),
-                        'completed_at' => now(),
+                        'started_at' => now(),
                     ]
                 );
             }
-            
-            // Get all workflow steps
-            $workflowSteps = $purchaseRequest->workflow_steps ?? $purchaseRequest->getDefaultWorkflowSteps();
-            
-            // Mark all remaining steps as completed
-            foreach ($workflowSteps as $step) {
-                // Skip the 'Completed' status itself
-                if ($step === 'Completed') {
-                    continue;
-                }
-                // Skip if it's the current status (already handled above)
-                if ($step === $oldStatus) {
-                    continue;
-                }
-                
-                // Check if this step already has a status history
-                $existingHistory = $purchaseRequest->statusHistory()->where('status', $step)->first();
-                
-                if (!$existingHistory) {
-                    // Create new status history for unprocessed steps
-                    $purchaseRequest->statusHistory()->create([
-                        'status' => $step,
-                        'user_id' => auth()->id(),
-                        'started_at' => now(),
-                        'completed_at' => now(),
-                        'is_skipped' => true, // Mark as skipped since it wasn't actually processed
-                    ]);
-                } else if (!$existingHistory->completed_at) {
-                    // Update existing history to mark as completed
-                    $existingHistory->update([
-                        'completed_at' => now(),
-                        'is_skipped' => true, // Mark as skipped since it wasn't actually processed
-                    ]);
-                }
-            }
-            
-            // Mark completion status as started and completed
-            $purchaseRequest->statusHistory()->updateOrCreate(
-                ['status' => 'Completed'],
-                [
-                    'user_id' => auth()->id(),
-                    'started_at' => now(),
-                    'completed_at' => now(),
-                ]
-            );
+        } else {
+            $purchaseRequest->save();
         }
 
-        return redirect()->route('purchase-requests.show', $purchaseRequest)
-            ->with('success', 'Purchase request completed successfully.');
+        // Notify other users that a step was removed
+        $allUsers = User::where('id', '!=', auth()->id())->get();
+        foreach ($allUsers as $user) {
+            $user->notify(new PurchaseRequestUpdated($purchaseRequest, $oldStatus, 'step_removed'));
+        }
+
+        return redirect()->route('purchase-requests.timeline', $purchaseRequest)
+            ->with('success', "Step '{$stepName}' has been removed.");
+    }
+
+    public function generateMonthlyReport(Request $request)
+    {
+        // Get the current date
+        $currentDate = now();
+
+        // Get the start and end date for the current month
+        $startOfMonth = $currentDate->startOfMonth();
+        $endOfMonth = $currentDate->endOfMonth();
+
+        // Fetch purchase requests for the current month
+        $purchaseRequests = PurchaseRequest::whereBetween('created_at', [$startOfMonth, $endOfMonth])
+                                           ->get();
+
+        // Calculate total funding (optional)
+        $totalFunding = $purchaseRequests->sum('funding');
+
+        // Calculate other necessary statistics (example: total number of PRs)
+        $totalPRs = $purchaseRequests->count();
+
+        // Pass the data to the view
+        return view('reports.monthly', compact('purchaseRequests', 'totalFunding', 'totalPRs', 'startOfMonth', 'endOfMonth'));
+    }
+
+    public function ajaxSearch(Request $request)
+    {
+        $query = trim($request->get('q', ''));
+        if ($query === '') {
+            return response()->json([]);
+        }
+
+        $user = auth()->user();
+        $baseQuery = PurchaseRequest::query();
+
+        // Restrict non-admins to their department
+        if (!($user && $user->role === 'admin')) {
+            $baseQuery->where('department_id', $user->department_id);
+        }
+
+        $results = $baseQuery
+            ->where(function($q) use ($query) {
+                $q->where('pr_number', 'like', "%{$query}%")
+                  ->orWhere('name', 'like', "%{$query}%")
+                  ->orWhere('mode_of_procurement', 'like', "%{$query}%");
+            })
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get(['id', 'pr_number', 'name', 'status', 'mode_of_procurement']);
+
+        return response()->json($results);
     }
 }

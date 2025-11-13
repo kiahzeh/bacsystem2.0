@@ -86,14 +86,16 @@ class DashboardController extends Controller
         ];
         
         // Always define these variables for the view
-        $alternativeBids = PurchaseRequest::where('mode_of_procurement', 'Alternative')
+        $alternativeBids = PurchaseRequest::whereRaw("LOWER(TRIM(mode_of_procurement)) = 'alternative'")
             ->when($search, fn($query) => $query->where('pr_number', 'like', "%$search%"))
             ->get();
 
-        $competitiveBids = PurchaseRequest::where('mode_of_procurement', 'Competitive')
+        $competitiveBids = PurchaseRequest::whereRaw("LOWER(TRIM(mode_of_procurement)) = 'competitive'")
             ->when($search, fn($query) => $query->where('pr_number', 'like', "%$search%"))
             ->get();
-        $othersBids = PurchaseRequest::where("mode_of_procurement", "Others")->when($search, fn($query) => $query->where("pr_number", "like", "%$search%"))->get();
+        $othersBids = PurchaseRequest::whereRaw("LOWER(TRIM(mode_of_procurement)) = 'others'")
+            ->when($search, fn($query) => $query->where("pr_number", "like", "%$search%"))
+            ->get();
 
         // Get completed PRs
         $completedPRs = PurchaseRequest::where('status', 'Completed')
@@ -188,8 +190,8 @@ class DashboardController extends Controller
         }
 
         $totalPRs = PurchaseRequest::count();
-        $alternativeCount = PurchaseRequest::where('mode_of_procurement', 'Alternative')->count();
-        $competitiveCount = PurchaseRequest::where('mode_of_procurement', 'Competitive')->count();
+        $alternativeCount = PurchaseRequest::whereRaw("LOWER(TRIM(mode_of_procurement)) = 'alternative'")->count();
+        $competitiveCount = PurchaseRequest::whereRaw("LOWER(TRIM(mode_of_procurement)) = 'competitive'")->count();
         $consolidatedCount = Consolidate::count();
 
         // Additional global statistics for dashboard cards
@@ -332,7 +334,7 @@ class DashboardController extends Controller
         foreach ($prNumbers as $prId) {
             $pr = PurchaseRequest::find($prId);
             if ($pr) {
-                $consolidate->purchaseRequests()->attach($pr); // Link PR to CPR (using a pivot table)
+                $consolidate->purchaseRequests()->attach($pr->id); // Link PR to CPR (using a pivot table)
             }
         }
 

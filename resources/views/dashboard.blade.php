@@ -322,6 +322,7 @@
                                     <a :href="'/purchase-requests/' + item.id" class="block px-4 py-2 hover:bg-blue-100 cursor-pointer">
                                         <span class="font-semibold text-blue-700" x-text="item.pr_number"></span>
                                         <span class="text-gray-600 ml-2" x-text="item.name"></span>
+                                        <span class="ml-2 text-xs bg-blue-100 text-blue-800 rounded px-2 py-1" x-text="item.mode_of_procurement"></span>
                                         <span class="ml-2 text-xs rounded px-2 py-1" :class="{
                                             'bg-green-100 text-green-800': item.status === 'Approved',
                                             'bg-yellow-100 text-yellow-800': item.status === 'Pending',
@@ -340,17 +341,23 @@
                     
                     <!-- Purchase Requests Overview -->
                     <div class="lg:col-span-2">
-                        <div class="glassmorphism-card rounded-lg">
+                        <div class="glassmorphism-card rounded-lg" x-data="{ collapseLists: false }">
                             <div class="p-6 border-b border-gray-200">
                                 <div class="flex items-center justify-between">
                                     <h2 class="text-xl font-bold text-white glass-heading">Purchase Requests Overview</h2>
-                                    <div class="flex space-x-2">
+                                    <div class="flex space-x-2 items-center">
                                         <a href="{{ route('purchase-requests.create') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                                             + New PR
                                         </a>
                                         <a href="{{ route('reports.monthly.export') }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
                                             Export Report
                                         </a>
+                                        <button type="button"
+                                                @click="collapseLists = !collapseLists"
+                                                class="px-3 py-2 rounded-md text-sm font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/20 transition">
+                                            <span x-show="!collapseLists">Collapse Lists</span>
+                                            <span x-show="collapseLists">Expand Lists</span>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -359,16 +366,16 @@
                                 <div class="mb-6">
                                     <h3 class="text-lg font-bold mb-4 text-white glass-heading">Monthly PR Trend</h3>
                                     <div class="relative h-64 bg-white/5 rounded-lg p-4 border border-white/10">
-                                        <canvas id="prMonthlyChart"></canvas>
+                                        <canvas id="prMonthlyChart" data-labels='@json($prMonthlyLabels ?? [])' data-series='@json($prMonthlyData ?? [])'></canvas>
                                     </div>
                                 </div>
                                 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
                                 <script>
                                     (function(){
-                                        const labels = {!! json_encode($prMonthlyLabels ?? []) !!};
-                                        const series = {!! json_encode($prMonthlyData ?? []) !!};
                                         const canvas = document.getElementById('prMonthlyChart');
                                         if (!canvas) return;
+                                        const labels = JSON.parse(canvas.dataset.labels || '[]');
+                                        const series = JSON.parse(canvas.dataset.series || '[]');
                                         const ctx = canvas.getContext('2d');
                                         new Chart(ctx, {
                                             type: 'bar',
@@ -399,7 +406,7 @@
                                     })();
                                 </script>
                                 <!-- Alternative Bids Section -->
-                                <div class="mb-6">
+                                <div class="mb-6" x-show="!collapseLists" x-transition>
                                     <h3 class="text-lg font-bold mb-4 text-white glass-heading">Alternative Bids</h3>
                                     @if ($alternativeBids->count())
                                         <div class="space-y-3">
@@ -436,7 +443,7 @@
                                 </div>
 
                                 <!-- Competitive Bids Section -->
-                                <div class="mb-6" x-data="{ selectAll: false, searchTerm: '' }">
+                                <div class="mb-6" x-data="{ selectAll: false, searchTerm: '' }" x-show="!collapseLists" x-transition>
                                     <h3 class="text-lg font-bold mb-4 text-white glass-heading">Competitive Bids</h3>
                                     
                                     @if ($competitiveBids->count())
@@ -557,7 +564,7 @@
                                 </div>
 
                                 <!-- Others Bids Section -->
-                                <div class="mb-6">
+                                <div class="mb-6" x-show="!collapseLists" x-transition>
                                     <h3 class="text-lg font-bold mb-4 text-white glass-heading">Others</h3>
                                     @if (isset($othersBids) && $othersBids->count())
                                         <div class="space-y-3">
@@ -594,7 +601,7 @@
                                 </div>
 
                                 <!-- Completed PRs Section -->
-                                <div class="mb-6">
+                                <div class="mb-6" x-show="!collapseLists" x-transition>
                                     <h3 class="text-lg font-bold mb-4 text-white glass-heading">Completed PRs</h3>
                                     @if (isset($completedPRs) && $completedPRs->count())
                                         <div class="space-y-3">
@@ -641,7 +648,7 @@
                                 </div>
 
                                 <!-- Consolidated PRs Section -->
-                                <div>
+                                <div x-show="!collapseLists" x-transition>
                                     <h3 class="text-lg font-bold mb-4 text-white glass-heading">Consolidated PRs</h3>
                                     @if($consolidatedPRs->count() > 0)
                                         <div class="space-y-3">

@@ -1,4 +1,4 @@
-<nav x-data="{ open: false }" class="glassmorphism-navbar fixed top-0 w-full z-50">
+<nav x-data="{ open: false }" class="glassmorphism-navbar fixed top-0 w-full z-50" data-notifications-index-url="{{ route('notifications.index') }}" data-notifications-mark-all-url="{{ route('notifications.mark-all-as-read') }}">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -42,7 +42,7 @@
                     x-data="notificationDropdown()" 
                     x-init="init()"
                     @click.away="open = false">
-                    <button @click="open = !open" class="flex items-center text-white hover:text-blue-200 transition-colors p-2 rounded-lg hover:bg-white/10">
+                    <button @click="open = !open; if (open) fetchNotifications()" class="flex items-center text-white hover:text-blue-200 transition-colors p-2 rounded-lg hover:bg-white/10">
                         <span class="relative inline-block">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -144,13 +144,14 @@
                 <div>
                     <button
                         @click="darkMode = !darkMode"
-                        class="p-2 rounded-full glassmorphism-button transition"
-                        :class="darkMode ? 'bg-gray-800 text-yellow-400' : 'bg-white text-gray-800'"
+                        class="p-2 rounded-full glassmorphism-button transition duration-200 transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0"
+                        :class="darkMode ? 'bg-gray-800 text-yellow-400 hover:ring-yellow-400/40' : 'bg-white text-gray-800 hover:ring-blue-500/40'"
                         aria-label="Toggle Dark Mode"
                     >
                         <!-- Sun Icon (Light) -->
-                        <svg x-show="!darkMode" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m8.66-8.66l-.71.71M4.05 4.05l-.71.71M21 12h-1M4 12H3m16.95 7.95l-.71-.71M4.05 19.95l-.71-.71" />
+                        <svg x-show="!darkMode" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v2m0 12v2m4.66-10.66l-1.414 1.414M6.757 17.243l-1.414 1.414M20 12h-2M6 12H4m12.243 5.243l-1.414-1.414M7.171 7.171L5.757 5.757" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
                         <!-- Moon Icon (Dark) -->
                         <svg x-show="darkMode" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -336,53 +337,60 @@
 
 <script>
 function notificationDropdown() {
+    // Read route URLs from the nav element to avoid Blade in JS
+    const navEl = document.querySelector('.glassmorphism-navbar');
+    const notificationsIndexUrl = navEl?.dataset.notificationsIndexUrl || '/notifications';
+    const notificationsMarkAllUrl = navEl?.dataset.notificationsMarkAllUrl || '/notifications/mark-all-as-read';
+
     return {
         open: false,
         notifications: [],
         unreadCount: 0,
         loading: false,
+        controller: null,
         
         async init() {
-            console.log('Initializing notifications...');
-            await this.fetchNotifications();
-            setInterval(() => this.fetchNotifications(), 30000);
+            window.addEventListener('beforeunload', () => {
+                try { this.controller?.abort(); } catch (_) {}
+            });
+            // Poll only when dropdown is open to reduce aborted fetch noise
+            setInterval(() => { if (this.open) this.fetchNotifications(); }, 30000);
         },
         
         async fetchNotifications() {
+            // Skip fetching if page is being hidden/unloaded to avoid abort noise
+            if (document.visibilityState === 'hidden') return;
+            
             try {
                 this.loading = true;
-                console.log('Fetching notifications...');
                 
-                const response = await fetch('{{ route('notifications.index') }}', {
+                // Abort any in-flight request before starting a new one
+                try { this.controller?.abort(); } catch (_) {}
+                this.controller = new AbortController();
+                
+                const response = await fetch(notificationsIndexUrl, {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json',
                     },
-                    credentials: 'same-origin'
+                    credentials: 'same-origin',
+                    signal: this.controller.signal
                 });
-                
-                console.log('Response status:', response.status);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
                 const data = await response.json();
-                console.log('Raw API response:', data);
-                console.log('Notifications array:', data.notifications);
-                console.log('Unread count:', data.unreadCount);
                 
                 this.notifications = data.notifications || [];
                 this.unreadCount = data.unreadCount || 0;
                 
-                console.log('Updated Alpine data:');
-                console.log('- notifications array length:', this.notifications.length);
-                console.log('- unreadCount:', this.unreadCount);
-                console.log('- notifications content:', this.notifications);
-                
             } catch (error) {
-                console.error('Error fetching notifications:', error);
+                // Ignore aborts triggered by navigation/unload
+                if (error?.name === 'AbortError') return;
+                // Fail silently to avoid noisy console during navigations
                 this.notifications = [];
                 this.unreadCount = 0;
             } finally {
@@ -395,32 +403,35 @@ function notificationDropdown() {
                 const response = await fetch(`/notifications/${id}/mark-as-read`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
-                    }
+                    },
+                    credentials: 'same-origin'
                 });
                 if (response.ok) {
                     await this.fetchNotifications();
                 }
             } catch (error) {
-                console.error('Error marking notification as read:', error);
+                if (error?.name === 'AbortError') return;
+                console.warn('Error marking notification as read:', error?.message || error);
             }
         },
         
         async markAllAsRead() {
             try {
-                const response = await fetch('{{ route('notifications.mark-all-as-read') }}', {
+                const response = await fetch(notificationsMarkAllUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
-                    }
+                    },
+                    credentials: 'same-origin'
                 });
                 if (response.ok) {
                     await this.fetchNotifications();
                 }
             } catch (error) {
-                console.error('Error marking all notifications as read:', error);
+                if (error?.name === 'AbortError') return;
+                console.warn('Error marking all notifications as read:', error?.message || error);
             }
         }
     }

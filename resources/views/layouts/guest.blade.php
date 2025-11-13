@@ -17,44 +17,32 @@
 
         <!-- Dark Mode Toggle Script -->
         <script>
-            // Check for dark mode in localStorage
+            // Initial theme check based on localStorage and system preference
             if (localStorage.getItem('theme') === 'dark' ||
                 (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 document.documentElement.classList.add('dark');
             } else {
                 document.documentElement.classList.remove('dark');
             }
-
-            // Toggle function
-            function toggleDarkMode() {
-                const html = document.documentElement;
-                if (html.classList.contains('dark')) {
-                    html.classList.remove('dark');
-                    localStorage.setItem('theme', 'light');
-                } else {
-                    html.classList.add('dark');
-                    localStorage.setItem('theme', 'dark');
-                }
-            }
+            // Toggle function handled in the bottom script for consistency
         </script>
     </head>
 
-    <body class="bg-gray-100 text-black dark:bg-gray-900 dark:text-gray-100">
+    <body class="bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
 
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0">
 
 <!-- Dark Mode Toggle Button with Icons -->
 <div class="absolute top-4 right-4">
-    <button onclick="toggleDarkMode()" id="themeToggle" class="flex items-center px-4 py-2 bg-gray-200 dark:bg-gray-700 text-sm font-semibold rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition">
-        <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m8.66-12.66l-.707.707M4.05 19.95l-.707-.707M21 12h-1M4 12H3m16.66 4.66l-.707-.707M4.05 4.05l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+    <button onclick="toggleDarkMode()" id="themeToggle" class="p-2 rounded-full glassmorphism-button transition duration-200 transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 bg-white text-gray-800" aria-label="Toggle Dark Mode">
+        <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v2m0 12v2m4.66-10.66l-1.414 1.414M6.757 17.243l-1.414 1.414M20 12h-2M6 12H4m12.243 5.243l-1.414-1.414M7.171 7.171L5.757 5.757" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
         </svg>
 
-        <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true" focusable="false">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" />
         </svg>
-
-        Toggle Theme
     </button>
 </div>
 
@@ -76,14 +64,19 @@
     const html = document.documentElement;
     const moonIcon = document.getElementById('moonIcon');
     const sunIcon = document.getElementById('sunIcon');
+    const themeToggleBtn = document.getElementById('themeToggle');
 
     function updateIcons() {
         if (html.classList.contains('dark')) {
-            moonIcon.classList.add('hidden');
-            sunIcon.classList.remove('hidden');
-        } else {
             moonIcon.classList.remove('hidden');
             sunIcon.classList.add('hidden');
+            themeToggleBtn.classList.remove('bg-white','text-gray-800','hover:ring-blue-500/40');
+            themeToggleBtn.classList.add('bg-gray-800','text-yellow-400','hover:ring-yellow-400/40');
+        } else {
+            moonIcon.classList.add('hidden');
+            sunIcon.classList.remove('hidden');
+            themeToggleBtn.classList.remove('bg-gray-800','text-yellow-400','hover:ring-yellow-400/40');
+            themeToggleBtn.classList.add('bg-white','text-gray-800','hover:ring-blue-500/40');
         }
     }
 
@@ -93,7 +86,6 @@
         updateIcons();
     }
 
-    // Run after DOM is ready
     document.addEventListener('DOMContentLoaded', function () {
         if (localStorage.getItem('theme') === 'dark' ||
             (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -102,7 +94,7 @@
             html.classList.remove('dark');
         }
 
-        updateIcons(); // Now this runs when icons are ready
+        updateIcons();
     });
 </script>
 

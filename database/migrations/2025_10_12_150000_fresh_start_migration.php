@@ -98,16 +98,26 @@ return new class extends Migration
                 $table->id();
                 $table->string('pr_number');
                 $table->string('name');
+                $table->string('project_title')->nullable();
                 $table->date('order_date');
                 $table->string('status')->default('ATP');
                 $table->text('remarks')->nullable();
                 $table->string('funding')->nullable();
+                $table->string('mode_of_procurement')->nullable();
+                $table->decimal('abc_approved_budget', 15, 2)->nullable();
+                $table->string('category')->nullable();
+                $table->text('purpose_description')->nullable();
                 $table->foreignId('user_id')->constrained()->onDelete('cascade');
                 $table->foreignId('department_id')->constrained()->onDelete('cascade');
                 $table->unsignedBigInteger('consolidated_request_id')->nullable();
                 $table->json('workflow_steps')->nullable();
                 $table->boolean('is_archived')->default(false);
                 $table->timestamp('archived_at')->nullable();
+                $table->date('completion_date')->nullable();
+                $table->decimal('final_amount', 15, 2)->nullable();
+                $table->string('awarded_vendor')->nullable();
+                $table->string('contract_number')->nullable();
+                $table->text('completion_notes')->nullable();
                 $table->timestamps();
             });
         }

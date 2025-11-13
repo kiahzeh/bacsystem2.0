@@ -36,6 +36,7 @@ RUN apt-get update \
         zip \
         unzip \
         libpq-dev \
+        libsqlite3-dev \
         libonig-dev \
         pkg-config \
     && rm -rf /var/lib/apt/lists/*
@@ -46,6 +47,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" \
         pdo \
         pdo_pgsql \
+        pdo_sqlite \
         mbstring \
         exif \
         pcntl \
@@ -65,8 +67,8 @@ RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoload
 # Copy application code
 COPY . .
 
-# Run Composer scripts that require application code (safe fallback if env missing)
-RUN composer dump-autoload --optimize && php artisan package:discover --ansi || true
+# Avoid running artisan during image build; just optimize autoload without scripts
+RUN composer dump-autoload --no-scripts -o || true
 
 # Copy built Vite assets from assets stage
 COPY --from=assets /app/public/build /var/www/html/public/build

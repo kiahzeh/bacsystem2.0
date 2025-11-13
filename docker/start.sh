@@ -26,4 +26,34 @@ mkdir -p /var/www/html/storage/framework/views \
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
+# If using SQLite, ensure the database file exists and is writable
+if [ "${DB_CONNECTION:-}" = "sqlite" ]; then
+  DB_FILE="${DB_DATABASE:-/var/www/html/database/database.sqlite}"
+  DB_DIR="$(dirname "$DB_FILE")"
+  mkdir -p "$DB_DIR"
+  if [ ! -f "$DB_FILE" ]; then
+    touch "$DB_FILE" || true
+    echo "Created SQLite database at $DB_FILE"
+  fi
+  chown -R www-data:www-data "$DB_DIR" || true
+  chmod 775 "$DB_DIR" || true
+  chmod 664 "$DB_FILE" || true
+fi
+
+# Storage symlink
+if [ ! -L /var/www/html/public/storage ]; then
+  php artisan storage:link || true
+fi
+
+# Refresh config and run migrations if not skipped
+php artisan config:clear || true
+php artisan config:cache || true
+
+if [ "${SKIP_AUTO_MIGRATE:-false}" != "true" ]; then
+  php artisan migrate --force || true
+  if [ "${RUN_DB_SEED:-false}" = "true" ]; then
+    php artisan db:seed --force || true
+  fi
+fi
+
 exec /usr/local/bin/apache2-foreground
