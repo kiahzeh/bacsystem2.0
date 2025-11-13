@@ -2,13 +2,6 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <div class="flex items-center space-x-4">
-                <button onclick="history.back()" 
-                        class="bg-gray-500/20 hover:bg-gray-500/40 text-gray-200 hover:text-white px-4 py-2 rounded-lg font-medium transition flex items-center">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                    </svg>
-                    Back
-                </button>
                 <h2 class="font-semibold text-xl text-white leading-tight">
                     {{ __('Purchase Request Timeline') }} - {{ $purchaseRequest->name }}
                 </h2>
@@ -28,7 +21,17 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="glassmorphism-card overflow-hidden shadow-sm sm:rounded-lg p-6">
+            <div class="glassmorphism-card overflow-visible shadow-sm sm:rounded-lg p-6">
+                @if(session('success'))
+                    <div class="bg-green-500/20 border border-green-400/30 text-green-200 px-4 py-3 rounded relative mb-4" role="alert">
+                        <span class="block sm:inline">{{ session('success') }}</span>
+                    </div>
+                @endif
+                @if(session('error'))
+                    <div class="bg-red-500/20 border border-red-400/30 text-red-200 px-4 py-3 rounded relative mb-4" role="alert">
+                        <span class="block sm:inline">{{ session('error') }}</span>
+                    </div>
+                @endif
                 <!-- Request Details -->
                 <div class="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -89,21 +92,15 @@
                                     $totalSteps = count($allStatuses);
                                     $progress = ($totalSteps > 1) ? (($currentStep / ($totalSteps - 1)) * 100) : 100;
                                 @endphp
-                                <div class="bg-orange-400 h-2.5 rounded-full transition-all duration-500" style="width: {{ $progress }}%"></div>
+                                <div class="progress-bar bg-orange-400 h-2.5 rounded-full transition-all duration-500" data-progress="{{ number_format($progress, 2) }}"></div>
                             </div>
                             <p class="text-sm text-white glass-text">Progress: {{ number_format($progress, 1) }}%</p>
                             
                             @if($purchaseRequest->status === 'Completed')
                                 @php
-                                    $autoCompletedSteps = $purchaseRequest->statusHistory()
-                                        ->where('is_skipped', true)
-                                        ->where('status', '!=', 'Completed')
-                                        ->count();
+                                    $autoCompletedSteps = $purchaseRequest->statusHistory()->where('is_skipped', true)->where('status', '!=', 'Completed')->count();
                                     $totalSteps = count($allStatuses);
-                                    $completedSteps = $purchaseRequest->statusHistory()
-                                        ->where('completed_at', '!=', null)
-                                        ->where('status', '!=', 'Completed')
-                                        ->count();
+                                    $completedSteps = $purchaseRequest->statusHistory()->where('completed_at', '!=', null)->where('status', '!=', 'Completed')->count();
                                 @endphp
                                 @if($autoCompletedSteps > 0)
                                     <div class="mt-3 p-3 bg-yellow-500/10 border border-yellow-400/30 rounded-lg">
@@ -209,7 +206,7 @@
                                 animation: 150,
                                 onEnd: function () {
                                     const order = Array.from(document.querySelectorAll('.workflow-step-item')).map(el => el.dataset.index);
-                                    const reorderUrl = '{{ route('purchase-requests.workflow.reorder-steps', $purchaseRequest) }}';
+                                    const reorderUrl = "{{ route('purchase-requests.workflow.reorder-steps', $purchaseRequest) }}";
                                     fetch(reorderUrl, {
                                         method: 'POST',
                                         headers: {
@@ -239,6 +236,45 @@
                     </div>
                 @endif
 
+                <!-- Filter & Quick-Jump -->
+                <div class="mb-8 glassmorphism-card rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-lg font-semibold">Filter & Quick-Jump</h3>
+                        <span class="px-2 py-1 text-xs rounded bg-orange-500/20 text-orange-200">Bro</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label for="statusFilter" class="block text-xs text-white/70 mb-1">Status</label>
+                            <select id="statusFilter" class="w-full px-3 py-2 rounded-lg glass-input focus:outline-none focus:ring-2 focus:ring-orange-400/50">
+                                <option value="">All</option>
+                                <option value="completed">Completed</option>
+                                <option value="skipped">Skipped</option>
+                                <option value="inprogress">In Progress</option>
+                                <option value="pending">Pending</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="actorFilter" class="block text-xs text-white/70 mb-1">Actor</label>
+                            <input id="actorFilter" type="text" placeholder="Actor name..." class="w-full px-3 py-2 rounded-lg glass-input focus:outline-none focus:ring-2 focus:ring-orange-400/50" />
+                        </div>
+                        <div>
+                            <label for="dateFromFilter" class="block text-xs text-white/70 mb-1">From Date</label>
+                            <input id="dateFromFilter" type="date" class="w-full px-3 py-2 rounded-lg glass-input focus:outline-none focus:ring-2 focus:ring-orange-400/50" />
+                        </div>
+                        <div>
+                            <label for="quickJump" class="block text-xs text-white/70 mb-1">Quick Jump</label>
+                            <div class="flex items-center space-x-2">
+                                <select id="quickJump" class="flex-1 px-3 py-2 rounded-lg glass-input focus:outline-none focus:ring-2 focus:ring-orange-400/50">
+                                    @foreach($allStatuses as $i => $s)
+                                        <option value="step-{{ $i + 1 }}">Step {{ $i + 1 }}: {{ $s }}</option>
+                                    @endforeach
+                                </select>
+                                <button id="quickJumpBtn" type="button" class="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/40 text-blue-200 hover:text-blue-100 rounded-lg text-sm font-medium transition">Go</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Enhanced Timeline -->
                 <div class="mt-16">
                     <div class="space-y-6">
@@ -253,9 +289,18 @@
                                 $pendingDocs = $purchaseRequest->getPendingDocumentsForStep($status);
                                 $rejectedDocs = $purchaseRequest->getRejectedDocumentsForStep($status);
                                 $docsApproved = $purchaseRequest->areDocumentsApprovedForStep($status);
+                                $statusType = $isPastStatus ? (($statusHistory && $statusHistory->is_skipped) ? 'skipped' : 'completed') : ($isCurrentStatus ? 'inprogress' : 'pending');
+                                $actorName = ($statusHistory && $statusHistory->user) ? $statusHistory->user->name : '';
+                                $startedDate = ($statusHistory && $statusHistory->started_at) ? $statusHistory->started_at->format('Y-m-d') : '';
+                                $completedDate = ($statusHistory && $statusHistory->completed_at) ? $statusHistory->completed_at->format('Y-m-d') : '';
                             @endphp
                             
-                            <div class="relative">
+                            <div id="step-{{ $index + 1 }}" class="relative"
+                                 data-step-name="{{ $status }}"
+                                 data-status-type="{{ $statusType }}"
+                                 data-actor="{{ $actorName }}"
+                                 data-started="{{ $startedDate }}"
+                                 data-completed="{{ $completedDate }}">
                                 <!-- Connection Line -->
                                 @if($index < count($allStatuses) - 1)
                                     <div class="absolute left-8 top-16 w-0.5 h-12 {{ $isPastStatus ? 'bg-green-400' : 'bg-gray-400/30' }}"></div>
@@ -267,14 +312,14 @@
                                         <div class="flex-shrink-0">
                                             <div class="relative">
                                                 @if($isPastStatus)
-                                                    @if($statusHistory && $statusHistory->is_skipped && $purchaseRequest->status === 'Completed')
-                                                        <!-- Auto-Completed Step -->
-                                                        <div class="w-16 h-16 rounded-full bg-yellow-500/20 border-2 border-yellow-400 flex items-center justify-center relative">
+                                                    @if($statusHistory && $statusHistory->is_skipped)
+                                                        <!-- Skipped Step -->
+                                                        <div class="w-16 h-16 rounded-full bg-yellow-500/20 border-2 border-yellow-400 flex items-center justify-center relative" title="Skipped">
                                                             <svg class="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
                                                             </svg>
                                                             <div class="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center">
-                                                                <span class="text-yellow-900 text-xs font-bold">A</span>
+                                                                <span class="text-yellow-900 text-xs font-bold">S</span>
                                                             </div>
                                                             @if($uploadedDocuments->count() > 0)
                                                                 <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-yellow-400/80 rounded-full flex items-center justify-center" title="{{ $uploadedDocuments->count() }} document(s) uploaded">
@@ -286,7 +331,7 @@
                                                         </div>
                                                     @else
                                                         <!-- Completed Step -->
-                                                        <div class="w-16 h-16 rounded-full bg-green-500/20 border-2 border-green-400 flex items-center justify-center relative">
+                                                        <div class="w-16 h-16 rounded-full bg-green-500/20 border-2 border-green-400 flex items-center justify-center relative" title="Completed">
                                                             <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                                             </svg>
@@ -299,7 +344,7 @@
                                                             @elseif($uploadedDocuments->count() > 0)
                                                                 <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400/70 rounded-full flex items-center justify-center" title="{{ $uploadedDocuments->count() }} document(s) uploaded">
                                                                     <svg class="w-3 h-3 text-green-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                                     </svg>
                                                                 </div>
                                                             @endif
@@ -371,6 +416,9 @@
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                                                     </svg>
                                                                     Completed: {{ $statusHistory->completed_at->format('M d, Y H:i') }}
+                                                                    @if($statusHistory && $statusHistory->user)
+                                                                        <span class="ml-2 text-white/60">by {{ $statusHistory->user->name }}</span>
+                                                                    @endif
                                                                 </p>
                                                             @endif
                                                             @if($statusHistory->started_at && $statusHistory->completed_at)
@@ -381,12 +429,15 @@
                                                                     Duration: {{ $statusHistory->duration ?? $statusHistory->started_at->diffInHours($statusHistory->completed_at) }} hours
                                                                 </p>
                                                             @endif
-                                                            @if($statusHistory && $statusHistory->is_skipped && $purchaseRequest->status === 'Completed')
+                                                            @if($statusHistory && $statusHistory->is_skipped)
                                                                 <p class="flex items-center text-yellow-300 text-xs">
                                                                     <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                                     </svg>
-                                                                    Auto-completed when PR was finished
+                                                                    Skipped: {{ optional($statusHistory->completed_at)->format('M d, Y H:i') }}
+                                                                    @if($statusHistory->user)
+                                                                        <span class="ml-2 text-white/60">by {{ $statusHistory->user->name }}</span>
+                                                                    @endif
                                                                 </p>
                                                             @endif
                                                         </div>
@@ -396,15 +447,15 @@
                                                 <!-- Status Badge -->
                                                 <div class="flex items-center space-x-2">
                                                     @if($isPastStatus)
-                                                        @if($statusHistory && $statusHistory->is_skipped && $purchaseRequest->status === 'Completed')
-                                                            <span class="px-3 py-1 bg-yellow-500/20 text-yellow-200 rounded-full text-sm font-medium flex items-center">
+                                                        @if($statusHistory && $statusHistory->is_skipped)
+                                                            <span class="px-3 py-1 bg-yellow-500/20 text-yellow-200 rounded-full text-sm font-medium flex items-center" title="Skipped">
                                                                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
                                                                 </svg>
-                                                                Auto-Completed
+                                                                Skipped
                                                             </span>
                                                         @else
-                                                            <span class="px-3 py-1 bg-green-500/20 text-green-200 rounded-full text-sm font-medium">
+                                                            <span class="px-3 py-1 bg-green-500/20 text-green-200 rounded-full text-sm font-medium" title="Completed">
                                                                 Completed
                                                             </span>
                                                         @endif
@@ -421,11 +472,11 @@
                                                     @if(auth()->user()->isAdmin())
                                                         <div class="flex space-x-1">
                                                             <a href="{{ route('purchase-requests.workflow.remove-step.confirm', [$purchaseRequest, $index]) }}" 
-                                                               class="bg-red-500/20 hover:bg-red-500/40 text-red-300 hover:text-red-200 px-2 py-1 rounded text-xs transition">
+                                                               class="bg-red-500/20 hover:bg-red-500/40 text-red-300 hover:text-red-200 px-2 py-1 rounded text-xs transition" title="Remove this step from workflow">
                                                                 Remove
                                                             </a>
                                                             <a href="{{ route('purchase-requests.workflow.skip-step.confirm', [$purchaseRequest, $index]) }}" 
-                                                               class="bg-yellow-500/20 hover:bg-yellow-500/40 text-yellow-300 hover:text-yellow-200 px-2 py-1 rounded text-xs transition">
+                                                               class="bg-yellow-500/20 hover:bg-yellow-500/40 text-yellow-300 hover:text-yellow-200 px-2 py-1 rounded text-xs transition" title="Skip this step; advances if current">
                                                                 Skip
                                                             </a>
                                                         </div>
@@ -456,7 +507,7 @@
                                                                     
                                                                     @if($canAdvance)
                                                                         <a href="{{ route('purchase-requests.workflow.next-step.confirm', [$purchaseRequest, $index]) }}" 
-                                                                           class="bg-green-500/20 hover:bg-green-500/40 text-green-200 hover:text-green-100 px-6 py-2 rounded-lg font-medium transition flex items-center">
+                                                                           class="bg-green-500/20 hover:bg-green-500/40 text-green-200 hover:text-green-100 px-6 py-2 rounded-lg font-medium transition flex items-center" title="Advance to next step; marks current as complete">
                                                                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
                                                                             </svg>
@@ -494,6 +545,9 @@
                                                                     @if($statusHistory && $statusHistory->started_at)
                                                                         <div class="mt-1 text-xs text-white/60">
                                                                             Started: {{ $statusHistory->started_at->format('M d, Y H:i') }}
+                                                                            @if($statusHistory && $statusHistory->user)
+                                                                                <span class="ml-2">by {{ $statusHistory->user->name }}</span>
+                                                                            @endif
                                                                         </div>
                                                                     @endif
                                                                     
@@ -760,5 +814,64 @@
                 hideRejectModal();
             }
         });
+    </script>
+    <script>
+    // Filtering logic (placed inside layout)
+    (function() {
+        const statusSelect = document.getElementById('statusFilter');
+        const actorInput = document.getElementById('actorFilter');
+        const dateFromInput = document.getElementById('dateFromFilter');
+        const stepItems = Array.from(document.querySelectorAll('[id^="step-"]'));
+
+        // Initialize progress bars from data-progress to avoid inline style parsing issues
+        document.querySelectorAll('.progress-bar[data-progress]').forEach(el => {
+            el.style.width = (el.dataset.progress || '0') + '%';
+        });
+
+        function matches(item) {
+            const statusType = item.dataset.statusType || '';
+            const actor = (item.dataset.actor || '').toLowerCase();
+            const started = item.dataset.started || '';
+            const completed = item.dataset.completed || '';
+            const actorQ = (actorInput && actorInput.value || '').toLowerCase();
+            const dateFrom = (dateFromInput && dateFromInput.value) || '';
+
+            const statusOk = !statusSelect || !statusSelect.value || statusType === statusSelect.value;
+            const actorOk = !actorQ || actor.includes(actorQ);
+            const dateOk = !dateFrom || ((started && started >= dateFrom) || (completed && completed >= dateFrom));
+            return statusOk && actorOk && dateOk;
+        }
+
+        function applyFilters() {
+            stepItems.forEach(item => {
+                item.style.display = matches(item) ? '' : 'none';
+            });
+        }
+
+        ['input', 'change'].forEach(evt => {
+            if (statusSelect) statusSelect.addEventListener(evt, applyFilters);
+            if (actorInput) actorInput.addEventListener(evt, applyFilters);
+            if (dateFromInput) dateFromInput.addEventListener(evt, applyFilters);
+        });
+        // Apply filters on initial load to reflect default selections
+        applyFilters();
+
+        // Search suggestions removed
+
+        // Quick jump
+        const quickJump = document.getElementById('quickJump');
+        const quickJumpBtn = document.getElementById('quickJumpBtn');
+        if (quickJump && quickJumpBtn) {
+            quickJumpBtn.addEventListener('click', () => {
+                const targetId = quickJump.value;
+                const el = document.getElementById(targetId);
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    el.classList.add('ring-2', 'ring-blue-400/50');
+                    setTimeout(() => el.classList.remove('ring-2', 'ring-blue-400/50'), 1200);
+                }
+            });
+        }
+    })();
     </script>
 </x-app-layout>
