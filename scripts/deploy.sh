@@ -5,8 +5,8 @@ echo "==> Starting deploy"
 
 # Ensure env exists (copy template if missing)
 if [ ! -f .env ]; then
-  echo "==> .env missing; copying .env.production.example"
-  cp .env.production.example .env
+  echo "==> .env missing; copying .env.example"
+  cp .env.example .env
 fi
 
 echo "==> Composer install (prod)"
