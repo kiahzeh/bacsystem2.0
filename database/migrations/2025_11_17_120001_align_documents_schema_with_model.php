@@ -39,10 +39,10 @@ return new class extends Migration
 
         // Backfill data from legacy columns if present
         if (Schema::hasColumn('documents', 'name')) {
-            DB::statement('UPDATE documents SET original_filename = name WHERE original_filename IS NULL OR original_filename = ""');
+            DB::statement("UPDATE documents SET original_filename = name WHERE original_filename IS NULL OR original_filename = ''");
         }
         if (Schema::hasColumn('documents', 'file_path')) {
-            DB::statement('UPDATE documents SET path = file_path WHERE path IS NULL OR path = ""');
+            DB::statement("UPDATE documents SET path = file_path WHERE path IS NULL OR path = ''");
         }
         if (Schema::hasColumn('documents', 'is_approved')) {
             DB::statement("UPDATE documents SET approval_status = CASE WHEN is_approved = 1 THEN 'approved' ELSE COALESCE(approval_status, 'pending') END");

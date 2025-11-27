@@ -10,7 +10,7 @@ return new class extends Migration
     public function up()
     {
         // First, copy data from file_path to path if path is empty
-        DB::statement('UPDATE documents SET path = file_path WHERE path IS NULL OR path = ""');
+        DB::statement("UPDATE documents SET path = file_path WHERE path IS NULL OR path = ''");
 
         // Drop file_path column
         Schema::table('documents', function (Blueprint $table) {
@@ -29,6 +29,6 @@ return new class extends Migration
         });
 
         // Copy data back if needed
-        DB::statement('UPDATE documents SET file_path = path WHERE file_path IS NULL OR file_path = ""');
+        DB::statement("UPDATE documents SET file_path = path WHERE file_path IS NULL OR file_path = ''");
     }
-}; 
+};
