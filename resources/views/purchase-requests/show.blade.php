@@ -40,11 +40,11 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
+            <div class="bg-transparent dark:bg-transparent overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-white dark:text-gray-100">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                        <div class="bg-transparent dark:bg-slate-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
+                            <h3 class="text-lg font-medium text-white dark:text-white mb-4 flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
@@ -52,72 +52,72 @@
                             </h3>
                             <div class="mt-4 space-y-4">
                                 <div class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-white/70 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <span class="text-gray-500 w-24">Name:</span>
+                                    <span class="text-white/80 dark:text-gray-300 w-24">Name:</span>
                                     <p class="ml-2 font-medium">{{ $purchaseRequest->name }}</p>
                                 </div>
                                 <div class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-white/70 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
-                                    <span class="text-gray-500 w-24">Order Date:</span>
+                                    <span class="text-white/80 dark:text-gray-300 w-24">Order Date:</span>
                                     <p class="ml-2 font-medium">{{ $purchaseRequest->order_date->format('F j, Y') }}</p>
                                 </div>
                                 <div class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-white/70 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                     </svg>
-                                    <span class="text-gray-500 w-24">Department:</span>
+                                    <span class="text-white/80 dark:text-gray-300 w-24">Department:</span>
                                     <p class="ml-2 font-medium">{{ $purchaseRequest->department->name }}</p>
                                 </div>
 
                                 <div class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-white/70 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <span class="text-gray-500 w-24">Mode of Procurement:</span>
+                                    <span class="text-white/80 dark:text-gray-300 w-24">Mode of Procurement:</span>
                                     <span class="ml-2 px-3 py-1 rounded-full text-sm font-semibold
                                         @if($purchaseRequest->mode_of_procurement == 'Alternative')
-                                            bg-blue-100 text-blue-800
+                                            bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100
                                         @elseif($purchaseRequest->mode_of_procurement == 'Competitive')
-                                            bg-green-100 text-green-800
+                                            bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100
                                         @else
-                                            bg-gray-100 text-gray-800
+                                            bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100
                                         @endif">
                                         {{ $purchaseRequest->mode_of_procurement }}
                                     </span>
                                 </div>
 
                                 <div class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-white/70 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                     </svg>
-                                    <span class="text-gray-500 w-24">Funding:</span>
+                                    <span class="text-white/80 dark:text-gray-300 w-24">Funding:</span>
                                     <p class="ml-2 font-medium">{{ $purchaseRequest->funding }}</p>
                                 </div>
 
                                 <div class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-white/70 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <span class="text-gray-500 w-24">Status:</span>
+                                    <span class="text-white/80 dark:text-gray-300 w-24">Status:</span>
                                     <span class="ml-2 px-3 py-1 rounded-full text-sm font-semibold
                                         @switch($purchaseRequest->status)
-                                            @case('ATP') bg-purple-100 text-purple-800 @break
-                                            @case('Procurement') bg-blue-100 text-blue-800 @break
-                                            @case('Posting in PhilGEPS') bg-indigo-100 text-indigo-800 @break
-                                            @case('Pre-Bid') bg-cyan-100 text-cyan-800 @break
-                                            @case('Bid Opening') bg-teal-100 text-teal-800 @break
-                                            @case('Bid Evaluation') bg-emerald-100 text-emerald-800 @break
-                                            @case('Post Qualification') bg-green-100 text-green-800 @break
-                                            @case('Confirmation on Approval') bg-lime-100 text-lime-800 @break
-                                            @case('Issuance of Notice of Award') bg-yellow-100 text-yellow-800 @break
-                                            @case('Purchase Order') bg-amber-100 text-amber-800 @break
-                                            @case('Contract') bg-orange-100 text-orange-800 @break
-                                            @case('Notice to Proceed') bg-red-100 text-red-800 @break
-                                            @case('Posting of Award in PhilGEPS') bg-pink-100 text-pink-800 @break
+                                            @case('ATP') bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100 @break
+                                            @case('Procurement') bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 @break
+                                            @case('Posting in PhilGEPS') bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-100 @break
+                                            @case('Pre-Bid') bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-100 @break
+                                            @case('Bid Opening') bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-100 @break
+                                            @case('Bid Evaluation') bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100 @break
+                                            @case('Post Qualification') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 @break
+                                            @case('Confirmation on Approval') bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-100 @break
+                                            @case('Issuance of Notice of Award') bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100 @break
+                                            @case('Purchase Order') bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100 @break
+                                            @case('Contract') bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100 @break
+                                            @case('Notice to Proceed') bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 @break
+                                            @case('Posting of Award in PhilGEPS') bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-100 @break
                                             @case('Forward Purchase or Supply') bg-rose-100 text-rose-800 @break
                                             @default bg-gray-100 text-gray-800
                                         @endswitch">
@@ -129,10 +129,10 @@
                                 @endphp
                                 @if($currentStatusHistory && $currentStatusHistory->started_at)
                                 <div class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-white/70 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                     </svg>
-                                    <span class="text-gray-500 w-24">Started:</span>
+                                    <span class="text-white/80 dark:text-gray-300 w-24">Started:</span>
                                     <p class="ml-2 font-medium">{{ $currentStatusHistory->started_at->format('F j, Y g:i A') }}</p>
                                 </div>
                                 @endif
@@ -141,8 +141,8 @@
 
                         
 
-                        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                        <div class="bg-transparent dark:bg-slate-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
+                            <h3 class="text-lg font-medium text-white dark:text-white mb-4 flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -150,38 +150,38 @@
                             </h3>
                             <div class="mt-4 space-y-4">
                                 <div class="flex items-start">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-white/70 dark:text-gray-300 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                                     </svg>
-                                    <span class="text-gray-500 w-24">Remarks:</span>
+                                    <span class="text-white/80 dark:text-gray-300 w-24">Remarks:</span>
                                     <p class="ml-2 flex-1">{{ $purchaseRequest->remarks ?? 'No remarks provided.' }}</p>
                                 </div>
                                 <div class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-white/70 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                     </svg>
-                                    <span class="text-gray-500 w-24">Created By:</span>
+                                    <span class="text-white/80 dark:text-gray-300 w-24">Created By:</span>
                                     <p class="ml-2 font-medium">{{ $purchaseRequest->user->name }}</p>
                                 </div>
                                 <div class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-white/70 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
-                                    <span class="text-gray-500 w-24">Created At:</span>
+                                    <span class="text-white/80 dark:text-gray-300 w-24">Created At:</span>
                                     <p class="ml-2">{{ $purchaseRequest->created_at->format('F j, Y g:i A') }}</p>
                                 </div>
                                 <div class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-white/70 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <span class="text-gray-500 w-24">Last Updated:</span>
+                                    <span class="text-white/80 dark:text-gray-300 w-24">Last Updated:</span>
                                     <p class="ml-2">{{ $purchaseRequest->updated_at->format('F j, Y g:i A') }}</p>
                                 </div>
                                 <div class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-white/70 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                     </svg>
-                                    <span class="text-gray-500 w-24">Last Updated By:</span>
+                                    <span class="text-white/80 dark:text-gray-300 w-24">Last Updated By:</span>
                                     <p class="ml-2 font-medium">
                                         {{ $purchaseRequest->lastModifiedBy ? $purchaseRequest->lastModifiedBy->name : 'N/A' }}
                                     </p>
@@ -191,8 +191,8 @@
 
                         <!-- Completion Information Section -->
                         @if($purchaseRequest->status === 'Completed')
-                        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                        <div class="bg-transparent dark:bg-slate-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
+                            <h3 class="text-lg font-medium text-white dark:text-white mb-4 flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -200,10 +200,10 @@
                             </h3>
                             <div class="mt-4 space-y-4">
                                 <div class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-white/70 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
-                                    <span class="text-gray-500 w-32">Completion Date:</span>
+                                    <span class="text-white/80 dark:text-gray-300 w-32">Completion Date:</span>
                                     <p class="ml-2 font-medium">
                                         @if($purchaseRequest->completion_date)
                                             @if($purchaseRequest->completion_date instanceof \Carbon\Carbon)
@@ -217,46 +217,46 @@
                                     </p>
                                 </div>
                                 <div class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                                     </svg>
-                                    <span class="text-gray-500 w-32">Final Amount:</span>
+                                    <span class="text-gray-600 dark:text-gray-300 w-32">Final Amount:</span>
                                     <p class="ml-2 font-medium">₱{{ number_format($purchaseRequest->final_amount ?? 0, 2) }}</p>
                                 </div>
                                 <div class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                     </svg>
-                                    <span class="text-gray-500 w-32">Awarded Vendor:</span>
+                                    <span class="text-white/80 w-32">Awarded Vendor:</span>
                                     <p class="ml-2 font-medium">{{ $purchaseRequest->awarded_vendor ?? 'N/A' }}</p>
                                 </div>
                                 <div class="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
-                                    <span class="text-gray-500 w-32">Contract Number:</span>
+                                    <span class="text-white/80 w-32">Contract Number:</span>
                                     <p class="ml-2 font-medium">{{ $purchaseRequest->contract_number ?? 'N/A' }}</p>
                                 </div>
                                 @if($purchaseRequest->completion_notes)
                                 <div class="flex items-start">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-white/70 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                                     </svg>
-                                    <span class="text-gray-500 w-32">Completion Notes:</span>
+                                    <span class="text-white/80 w-32">Completion Notes:</span>
                                     <p class="ml-2 flex-1">{{ $purchaseRequest->completion_notes }}</p>
                                 </div>
                                 @endif
                             </div>
                         </div>
                         @elseif(auth()->user()->isAdmin())
-                        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                        <div class="bg-transparent dark:bg-slate-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
+                            <h3 class="text-lg font-medium text-white dark:text-white mb-4 flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                 </svg>
                                 Mark as Completed
                             </h3>
-                            <p class="text-gray-600 mb-4">Complete this purchase request by providing final details.</p>
+                            <p class="text-white/80 dark:text-gray-300 mb-4">Complete this purchase request by providing final details.</p>
                             <a href="{{ route('purchase-requests.complete', $purchaseRequest) }}" 
                                class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md transition">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">

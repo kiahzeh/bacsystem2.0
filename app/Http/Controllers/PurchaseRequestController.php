@@ -16,6 +16,7 @@ use App\Models\Document;
 use App\Models\AuditLog;
 use App\Notifications\NewPurchaseRequestCreated;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class PurchaseRequestController extends Controller
 {
@@ -137,6 +138,77 @@ class PurchaseRequestController extends Controller
     }
 
     /**
+     * Show the completion form for a purchase request.
+     */
+    public function showCompleteForm(PurchaseRequest $purchaseRequest)
+    {
+        $this->authorize('update', $purchaseRequest);
+        // Only admins see and use the completion form in the UI; policy guards update.
+        return view('purchase-requests.complete', compact('purchaseRequest'));
+    }
+
+    /**
+     * Store completion details and mark the PR as completed.
+     */
+    public function complete(Request $request, PurchaseRequest $purchaseRequest)
+    {
+        $this->authorize('update', $purchaseRequest);
+
+        $validated = $request->validate([
+            'completion_date' => 'required|date',
+            'final_amount' => 'required|numeric|min:0',
+            'awarded_vendor' => 'required|string|max:255',
+            'contract_number' => 'nullable|string|max:255',
+            'completion_notes' => 'nullable|string',
+        ]);
+
+        $oldStatus = $purchaseRequest->status;
+
+        // Apply completion fields
+        $purchaseRequest->completion_date = $validated['completion_date'];
+        $purchaseRequest->final_amount = $validated['final_amount'];
+        $purchaseRequest->awarded_vendor = $validated['awarded_vendor'];
+        $purchaseRequest->contract_number = $validated['contract_number'] ?? null;
+        $purchaseRequest->completion_notes = $validated['completion_notes'] ?? null;
+
+        // Mark status as Completed and update metadata
+        $purchaseRequest->status = 'Completed';
+        $purchaseRequest->last_modified_by = auth()->id();
+        $purchaseRequest->last_modified_at = now();
+        $purchaseRequest->save();
+
+        // Update status history timestamps
+        if ($oldStatus && $oldStatus !== 'Completed') {
+            $purchaseRequest->statusHistory()->updateOrCreate(
+                ['status' => $oldStatus],
+                [
+                    'user_id' => auth()->id(),
+                    'completed_at' => now(),
+                ]
+            );
+        }
+
+        // Ensure Completed status is tracked as started and completed
+        $purchaseRequest->statusHistory()->updateOrCreate(
+            ['status' => 'Completed'],
+            [
+                'user_id' => auth()->id(),
+                'started_at' => now(),
+                'completed_at' => now(),
+            ]
+        );
+
+        // Notify all other users
+        $allUsers = \App\Models\User::where('id', '!=', auth()->id())->get();
+        foreach ($allUsers as $user) {
+            $user->notify(new \App\Notifications\PurchaseRequestUpdated($purchaseRequest, $oldStatus, 'completed'));
+        }
+
+        return redirect()->route('purchase-requests.show', $purchaseRequest)
+            ->with('success', 'Purchase request marked as completed.');
+    }
+
+    /**
      * Show the form for editing the specified resource.
      */
     public function edit(PurchaseRequest $purchaseRequest)
@@ -255,6 +327,67 @@ class PurchaseRequestController extends Controller
         }
         
         return view('purchase-requests.timeline', compact('purchaseRequest', 'allStatuses'));
+    }
+
+    /**
+     * Upload a document for the given purchase request from the timeline.
+     */
+    public function uploadDocument(Request $request, PurchaseRequest $purchaseRequest)
+    {
+        // Allow users who can view the PR (department members and admins) to upload
+        $this->authorize('view', $purchaseRequest);
+
+        $validated = $request->validate([
+            'document' => 'required|file|max:10240',
+            'status' => 'required|string',
+        ]);
+
+        $file = $request->file('document');
+        $originalFilename = $file->getClientOriginalName();
+        $filename = Str::random(40) . '.' . $file->getClientOriginalExtension();
+
+        // Store the file in the public disk under documents/{PR_ID}
+        $path = $file->storeAs('documents/' . $purchaseRequest->id, $filename, 'public');
+
+        // Create document record
+        $document = Document::create([
+            'purchase_request_id' => $purchaseRequest->id,
+            'filename' => $filename,
+            'original_filename' => $originalFilename,
+            'path' => $path,
+            'status' => $validated['status'],
+            'mime_type' => $file->getMimeType(),
+            'file_size' => $file->getSize(),
+            'uploaded_by' => auth()->id(),
+        ]);
+
+        // Fire notifications (department head, procurement, admins)
+        try {
+            $this->notifyDocumentUpload($purchaseRequest->loadMissing('department'), $document);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send document upload notifications', [
+                'error' => $e->getMessage(),
+                'purchase_request_id' => $purchaseRequest->id,
+                'document_id' => $document->id ?? null,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Document uploaded successfully.');
+    }
+
+    // Export a single purchase request as a downloadable PDF
+    public function export(PurchaseRequest $purchaseRequest)
+    {
+        $this->authorize('view', $purchaseRequest);
+
+        // Ensure related data needed by the export template is available
+        $purchaseRequest->loadMissing('department');
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('purchase-requests.export', compact('purchaseRequest'))
+            ->setPaper('a4');
+
+        $filename = 'PR-' . ($purchaseRequest->pr_number ?? $purchaseRequest->id) . '.pdf';
+        return $pdf->download($filename);
     }
 
     public function updateSteps(Request $request, PurchaseRequest $purchaseRequest)

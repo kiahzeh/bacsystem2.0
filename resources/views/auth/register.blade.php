@@ -1,10 +1,10 @@
 <x-guest-layout>
     <!-- Background with animated gradient - matching dashboard -->
-    <div class="fixed inset-0 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700">
+    <div class="fixed inset-0 bg-gradient-to-br from-blue-800 via-blue-900 to-indigo-900">
         <!-- Animated background elements -->
         <div class="absolute inset-0 overflow-hidden">
-            <div class="absolute -top-40 -right-40 w-80 h-80 bg-violet-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-            <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+            <div class="absolute -top-40 -right-40 w-80 h-80 bg-blue-600 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+            <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-700 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
             <div class="absolute top-40 left-40 w-80 h-80 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
         </div>
     </div>
@@ -44,7 +44,7 @@
                                required 
                                autofocus 
                                autocomplete="name"
-                               class="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition-all duration-300"
+                               class="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300"
                                placeholder="Enter your full name">
                         <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
                             <i data-feather="user" class="h-5 w-5 text-white/50"></i>
@@ -66,7 +66,7 @@
                                value="{{ old('email') }}" 
                                required 
                                autocomplete="username"
-                               class="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition-all duration-300"
+                               class="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300"
                                placeholder="Enter your email address">
                         <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
                             <i data-feather="mail" class="h-5 w-5 text-white/50"></i>
@@ -87,7 +87,7 @@
                                name="password" 
                                required 
                                autocomplete="new-password"
-                               class="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition-all duration-300"
+                               class="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300"
                                placeholder="Create a strong password">
                         <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
                             <i data-feather="lock" class="h-5 w-5 text-white/50"></i>
@@ -108,7 +108,7 @@
                                name="password_confirmation" 
                                required 
                                autocomplete="new-password"
-                               class="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition-all duration-300"
+                               class="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300"
                                placeholder="Confirm your password">
                         <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
                             <i data-feather="shield" class="h-5 w-5 text-white/50"></i>
@@ -123,21 +123,21 @@
                         <input id="terms" 
                                type="checkbox" 
                                required
-                               class="rounded border-white/30 text-violet-600 shadow-sm focus:ring-violet-500 bg-white/10 backdrop-blur-sm">
+                               class="rounded border-white/30 text-blue-600 shadow-sm focus:ring-blue-500 bg-white/10 backdrop-blur-sm">
                     </div>
                     <div class="ml-3 text-sm">
                         <label for="terms" class="text-white/80">
                             I agree to the 
-                            <a href="#" class="text-violet-300 hover:text-violet-200 underline">Terms of Service</a> 
+                            <a href="#" class="text-blue-300 hover:text-blue-200 underline">Terms of Service</a> 
                             and 
-                            <a href="#" class="text-violet-300 hover:text-violet-200 underline">Privacy Policy</a>
+                            <a href="#" class="text-blue-300 hover:text-blue-200 underline">Privacy Policy</a>
                         </label>
                     </div>
                 </div>
 
                 <!-- Register Button -->
                 <button type="submit" 
-                        class="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-offset-2 focus:ring-offset-transparent">
+                        class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-transparent">
                     <i data-feather="user-plus" class="inline w-5 h-5 mr-2"></i>
                     {{ __('Create Account') }}
                 </button>
@@ -154,7 +154,7 @@
             <div class="text-center">
                 <p class="text-white/70 text-sm">
                     Already have an account? 
-                    <a href="{{ route('login') }}" class="text-violet-300 hover:text-violet-200 font-medium transition-colors duration-300">
+                    <a href="{{ route('login') }}" class="text-blue-300 hover:text-blue-200 font-medium transition-colors duration-300">
                         Sign in here
                     </a>
                 </p>

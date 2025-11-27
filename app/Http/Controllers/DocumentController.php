@@ -62,12 +62,20 @@ class DocumentController extends Controller
             abort(404, 'File path not found');
         }
 
-        // Check if file exists in storage
-        if (!Storage::exists($document->path)) {
+        // Resolve absolute path for the public disk without using disk->path
+        $absolutePath = storage_path('app/public/' . ltrim($document->path, '/'));
+        if (!is_string($absolutePath) || !file_exists($absolutePath)) {
             abort(404, 'File not found in storage');
         }
 
-        return Storage::download($document->path, $document->original_filename);
+        $downloadName = $document->original_filename ?: basename($absolutePath);
+        $headers = [];
+        if (!empty($document->mime_type)) {
+            $headers['Content-Type'] = $document->mime_type;
+        }
+
+        // Stream file to client with a proper download response
+        return response()->download($absolutePath, $downloadName, $headers);
     }
 
     public function view(Document $document)
@@ -80,18 +88,26 @@ class DocumentController extends Controller
             abort(404, 'File path not found');
         }
 
-        // Check if file exists in storage
-        if (!Storage::exists($document->path)) {
+        // Resolve absolute path for the public disk without using disk->path
+        $absolutePath = storage_path('app/public/' . ltrim($document->path, '/'));
+        if (!is_string($absolutePath) || !file_exists($absolutePath)) {
             abort(404, 'File not found in storage');
         }
 
-        // Get file content
-        $file = Storage::get($document->path);
-        
-        // Return file with appropriate headers for viewing in browser
-        return response($file)
-            ->header('Content-Type', $document->mime_type)
-            ->header('Content-Disposition', 'inline; filename="' . $document->original_filename . '"');
+        // Determine MIME type for inline viewing
+        $mime = $document->mime_type;
+        if (empty($mime)) {
+            $detected = @mime_content_type($absolutePath);
+            $mime = $detected ?: 'application/octet-stream';
+        }
+
+        $headers = [
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'inline; filename="' . ($document->original_filename ?? basename($absolutePath)) . '"',
+        ];
+
+        // Stream file inline in a new tab-friendly way
+        return response()->file($absolutePath, $headers);
     }
 
     public function destroy(Document $document)
@@ -103,8 +119,8 @@ class DocumentController extends Controller
         }
 
         // Delete the file from storage if path exists and file exists
-        if ($document->path && Storage::exists($document->path)) {
-            Storage::delete($document->path);
+        if ($document->path && Storage::disk('public')->exists($document->path)) {
+            Storage::disk('public')->delete($document->path);
         }
 
         // Delete record from database

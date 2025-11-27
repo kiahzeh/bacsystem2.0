@@ -14,18 +14,21 @@ services:
         sync: false
       - key: APP_URL
         sync: false
+      # Laravel runtime drivers
+      - key: FILESYSTEM_DISK
+        value: public
+      - key: SESSION_DRIVER
+        value: file
+      - key: CACHE_DRIVER
+        value: file
+      - key: QUEUE_CONNECTION
+        value: sync
       - key: DB_CONNECTION
         value: pgsql
-      - key: DB_HOST
+      - key: DATABASE_URL
         sync: false
-      - key: DB_PORT
-        sync: false
-      - key: DB_DATABASE
-        sync: false
-      - key: DB_USERNAME
-        sync: false
-      - key: DB_PASSWORD
-        sync: false
+      - key: DB_SSLMODE
+        value: require
       - key: MIGRATE_RETRIES
         value: 10
       - key: MIGRATE_SLEEP
@@ -50,3 +53,6 @@ services:
         sync: false
       - key: MAIL_FROM_NAME
         value: "BAC System"
+      # Brevo API key for transactional API (emails/SMS via BrevoService)
+      - key: BREVO_KEY
+        sync: false

@@ -47,6 +47,11 @@ MIGRATE_RETRIES=10
 MIGRATE_SLEEP=5
 SKIP_AUTO_MIGRATE=false
 RUN_DB_SEED=false
+
+BREVO_KEY=<paste-your-brevo-api-key>
+TWILIO_ACCOUNT_SID=<paste-your-twilio-sid>
+TWILIO_AUTH_TOKEN=<paste-your-twilio-token>
+TWILIO_FROM_NUMBER=<paste-your-twilio-number>
 ```
 
 ### Step 3: Deploy
@@ -185,6 +190,12 @@ databases:
    chmod -R 755 storage bootstrap/cache
    ```
 
+5. **Optional: Use Deploy Script Locally/On Server**
+   ```bash
+   bash scripts/deploy.sh
+   ```
+   This installs prod dependencies, runs migrations, builds assets, and caches config/routes/views.
+
 ---
 
 ## Troubleshooting
@@ -231,12 +242,97 @@ Good luck with your deployment! 🎉
 
 ## Render Post-Deploy (Recommended Settings)
 
-This project includes a Render configuration (`render.yaml`) tuned for reliable health checks and startup behavior.
+This project includes a Docker‑based Render blueprint (`render.yaml`) tailored for the free tier and PostgreSQL via `DATABASE_URL`.
 
 ### What’s configured
-- Health check path: `/robots.txt` (static, fast, doesn’t require app boot). The `/health` route is also available and returns `{"status":"ok"}`.
-- Start command: `php -S 0.0.0.0:$PORT -t public public/index.php` with startup prep (cache clears, storage symlink).
-- Database migrations: run on startup with retry logic controlled by env vars.
+- Runtime: Docker (`Dockerfile`) serves Laravel through Apache, builds Vite assets in a separate stage, and runs `docker/start.sh`.
+- Health check path: `/robots.txt` (static, fast, doesn’t require app boot).
+- Database: `DB_CONNECTION=pgsql` and `DATABASE_URL` for a single connection string; `DB_SSLMODE=require` for secure managed Postgres.
+- Laravel runtime: `FILESYSTEM_DISK=public`, `SESSION_DRIVER=file`, `CACHE_DRIVER=file`, `QUEUE_CONNECTION=sync`.
+- Startup: storage symlink, config cache, and automatic migrations (`php artisan migrate --force`).
+
+### Deploy to Render (Free Tier)
+
+1) Prerequisites
+- Render account
+- GitHub repository connected to Render (Blueprint deploy)
+- Free PostgreSQL (Neon recommended) for a persistent database
+
+2) Create a Neon database (recommended)
+- Sign up at https://neon.tech and create a project
+- Copy the connection string (format):
+  `postgresql://USER:PASSWORD@HOST:PORT/DBNAME?sslmode=require`
+
+3) Configure environment variables on the Render web service
+```
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://<your-service>.onrender.com
+APP_KEY=base64:<run-locally: php artisan key:generate --show>
+
+DB_CONNECTION=pgsql
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DBNAME?sslmode=require
+DB_SSLMODE=require
+
+FILESYSTEM_DISK=public
+SESSION_DRIVER=file
+CACHE_DRIVER=file
+QUEUE_CONNECTION=sync
+
+MAIL_MAILER=smtp
+MAIL_HOST=smtp-relay.brevo.com
+MAIL_PORT=587
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=<your-email>
+MAIL_FROM_NAME=BAC System
+MAIL_USERNAME=<brevo-smtp-login>
+MAIL_PASSWORD=<brevo-smtp-password>
+
+MIGRATE_RETRIES=10
+MIGRATE_SLEEP=5
+SKIP_AUTO_MIGRATE=false
+RUN_DB_SEED=false
+
+BREVO_KEY=<optional-brevo-api-key>
+```
+
+4) Deploy
+- From Render, click “New +” → “Blueprint” and point to your repo
+- The service builds the image, runs Apache on `$PORT`, and applies runtime prep
+- First boot runs migrations automatically
+
+5) Verify
+- Visit `/` and check pages and assets
+- Upload a document; View should open inline in a new tab; Download should work
+- Restart service; confirm database data persists (Neon)
+
+### Free Tier Storage Considerations
+
+- Without a persistent disk, files in `storage/app/public` are reset on redeploys.
+- Day‑to‑day service restarts typically keep the ephemeral filesystem intact, but builds wipe it.
+- If you need permanent uploads on the free tier, use a free S3‑compatible provider (Cloudflare R2) and switch the `public` disk to S3.
+
+Example `.env` for Cloudflare R2:
+```
+FILESYSTEM_DISK=s3
+AWS_ACCESS_KEY_ID=<r2-access-key>
+AWS_SECRET_ACCESS_KEY=<r2-secret-key>
+AWS_DEFAULT_REGION=auto
+AWS_BUCKET=<r2-bucket-name>
+AWS_URL=https://<account-id>.r2.cloudflarestorage.com/<r2-bucket-name>
+AWS_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+AWS_USE_PATH_STYLE_ENDPOINT=true
+```
+
+Then ensure your uploads use the `public` URL from `s3`:
+- In `config/filesystems.php`, `s3` disk is already defined; switching `FILESYSTEM_DISK` to `s3` routes uploads there.
+- Use `Storage::disk('s3')` for any explicit operations.
+
+### Troubleshooting on Render
+- 500 error at boot: check `APP_KEY` and that `config:cache` ran cleanly.
+- Database connection fails: verify `DATABASE_URL` and that `sslmode=require` is present (or `DB_SSLMODE=require`).
+- Missing assets: ensure the Docker build copies `/public/build` (the `Dockerfile` assets stage does this).
+- Storage link missing: the startup script runs `php artisan storage:link`; recheck if you’ve overridden it.
 - Optional seeding: disabled by default, can be enabled via env var.
 
 ### Required environment variables

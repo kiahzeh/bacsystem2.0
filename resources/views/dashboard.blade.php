@@ -66,24 +66,16 @@
         }
 
         /* Text Readability for Glassmorphism */
-        .glass-text {
-            color: white;
-            font-weight: 500;
-        }
+        /* Default to dark text in light mode, switch to white in dark mode */
+        .glass-text { color: #1f2937; font-weight: 500; }
+        .glass-heading { color: #111827; font-weight: 600; }
+        .glass-table-text { color: #1f2937; }
+        .glass-table-heading { color: #111827; font-weight: 600; }
 
-        .glass-heading {
-            color: white;
-            font-weight: 600;
-        }
-
-        .glass-table-text {
-            color: white;
-        }
-
-        .glass-table-heading {
-            color: white;
-            font-weight: 600;
-        }
+        .dark .glass-text { color: #ffffff; }
+        .dark .glass-heading { color: #ffffff; }
+        .dark .glass-table-text { color: #ffffff; }
+        .dark .glass-table-heading { color: #ffffff; }
     </style>
 
     @if(auth()->user()->isAdmin())
@@ -364,7 +356,7 @@
                             <div class="p-6">
                                 <!-- Monthly PR Trend Chart -->
                                 <div class="mb-6">
-                                    <h3 class="text-lg font-bold mb-4 text-white glass-heading">Monthly PR Trend</h3>
+                                    <h3 class="text-lg font-bold mb-4 glass-heading">Monthly PR Trend</h3>
                                     <div class="relative h-64 bg-white/5 rounded-lg p-4 border border-white/10">
                                         <canvas id="prMonthlyChart" data-labels='@json($prMonthlyLabels ?? [])' data-series='@json($prMonthlyData ?? [])'></canvas>
                                     </div>
@@ -377,6 +369,9 @@
                                         const labels = JSON.parse(canvas.dataset.labels || '[]');
                                         const series = JSON.parse(canvas.dataset.series || '[]');
                                         const ctx = canvas.getContext('2d');
+                                        const isDark = document.documentElement.classList.contains('dark');
+                                        const tickColor = isDark ? '#E5E7EB' : '#374151'; // gray-200 vs gray-700
+                                        const gridColor = isDark ? 'rgba(229, 231, 235, 0.15)' : 'rgba(55, 65, 81, 0.15)';
                                         new Chart(ctx, {
                                             type: 'bar',
                                             data: {
@@ -393,9 +388,14 @@
                                                 responsive: true,
                                                 maintainAspectRatio: false,
                                                 scales: {
+                                                    x: {
+                                                        ticks: { color: tickColor },
+                                                        grid: { color: gridColor }
+                                                    },
                                                     y: {
                                                         beginAtZero: true,
-                                                        ticks: { precision: 0 }
+                                                        ticks: { precision: 0, color: tickColor },
+                                                        grid: { color: gridColor }
                                                     }
                                                 },
                                                 plugins: {
@@ -407,7 +407,7 @@
                                 </script>
                                 <!-- Alternative Bids Section -->
                                 <div class="mb-6" x-show="!collapseLists" x-transition>
-                                    <h3 class="text-lg font-bold mb-4 text-white glass-heading">Alternative Bids</h3>
+                                    <h3 class="text-lg font-bold mb-4 glass-heading">Alternative Bids</h3>
                                     @if ($alternativeBids->count())
                                         <div class="space-y-3">
                                             @foreach ($alternativeBids as $bid)
@@ -438,13 +438,13 @@
                                             @endforeach
                                         </div>
                                     @else
-                                        <p class="text-white glass-text">No alternative bids found.</p>
+                                        <p class="glass-text">No alternative bids found.</p>
                                     @endif
                                 </div>
 
                                 <!-- Competitive Bids Section -->
                                 <div class="mb-6" x-data="{ selectAll: false, searchTerm: '' }" x-show="!collapseLists" x-transition>
-                                    <h3 class="text-lg font-bold mb-4 text-white glass-heading">Competitive Bids</h3>
+                                    <h3 class="text-lg font-bold mb-4 glass-heading">Competitive Bids</h3>
                                     
                                     @if ($competitiveBids->count())
                                         <!-- Search Bar for Competitive Bids -->
@@ -476,8 +476,8 @@
                                                                checkboxes.forEach(cb => cb.checked = selectAll);
                                                            "
                                                            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                                    <span class="text-white font-semibold">Select All Competitive Bids</span>
-                                                    <span class="text-white/70 text-sm">(<span x-text="document.querySelectorAll('input[name=\'pr_numbers[]\']:not([style*=\'display: none\'])').length"></span> items)</span>
+                                                    <span class="glass-text font-semibold">Select All Competitive Bids</span>
+                                                    <span class="text-gray-600 dark:text-white/70 text-sm">(<span x-text="document.querySelectorAll('input[name=\'pr_numbers[]\']:not([style*=\'display: none\'])').length"></span> items)</span>
                                                 </label>
                                             </div>
                                             
@@ -532,7 +532,7 @@
                                                 <svg class="mx-auto h-12 w-12 text-white/40 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                                 </svg>
-                                                <p class="text-white/60 text-lg">No competitive bids found matching "<span x-text="searchTerm"></span>"</p>
+                                                <p class="text-gray-600 dark:text-white/60 text-lg">No competitive bids found matching "<span x-text="searchTerm"></span>"</p>
                                                 <button type="button" @click="searchTerm = ''" class="text-violet-300 hover:text-violet-100 mt-2">
                                                     Clear search
                                                 </button>
@@ -559,13 +559,13 @@
                                             </div>
                                         </form>
                                     @else
-                                        <p class="text-white glass-text">No competitive purchase requests available.</p>
+                                    <p class="glass-text">No competitive purchase requests available.</p>
                                     @endif
                                 </div>
 
                                 <!-- Others Bids Section -->
                                 <div class="mb-6" x-show="!collapseLists" x-transition>
-                                    <h3 class="text-lg font-bold mb-4 text-white glass-heading">Others</h3>
+                                    <h3 class="text-lg font-bold mb-4 glass-heading">Others</h3>
                                     @if (isset($othersBids) && $othersBids->count())
                                         <div class="space-y-3">
                                             @foreach ($othersBids as $bid)
@@ -596,13 +596,13 @@
                                             @endforeach
                                         </div>
                                     @else
-                                        <p class="text-white glass-text">No others purchase requests found.</p>
+                                        <p class="glass-text">No others purchase requests found.</p>
                                     @endif
                                 </div>
 
                                 <!-- Completed PRs Section -->
                                 <div class="mb-6" x-show="!collapseLists" x-transition>
-                                    <h3 class="text-lg font-bold mb-4 text-white glass-heading">Completed PRs</h3>
+                                    <h3 class="text-lg font-bold mb-4 glass-heading">Completed PRs</h3>
                                     @if (isset($completedPRs) && $completedPRs->count())
                                         <div class="space-y-3">
                                             @foreach ($completedPRs as $pr)
@@ -643,13 +643,13 @@
                                             @endforeach
                                         </div>
                                     @else
-                                        <p class="text-white glass-text">No completed purchase requests found.</p>
+                                        <p class="glass-text">No completed purchase requests found.</p>
                                     @endif
                                 </div>
 
                                 <!-- Consolidated PRs Section -->
                                 <div x-show="!collapseLists" x-transition>
-                                    <h3 class="text-lg font-bold mb-4 text-white glass-heading">Consolidated PRs</h3>
+                                    <h3 class="text-lg font-bold mb-4 glass-heading">Consolidated PRs</h3>
                                     @if($consolidatedPRs->count() > 0)
                                         <div class="space-y-3">
                                             @foreach ($consolidatedPRs as $cpr)
@@ -669,7 +669,7 @@
                                             @endforeach
                                         </div>
                                     @else
-                                        <p class="text-white glass-text">No consolidated PRs found.</p>
+                                        <p class="glass-text">No consolidated PRs found.</p>
                                     @endif
                                 </div>
                             </div>
@@ -682,17 +682,17 @@
                         <!-- Quick Actions -->
                         <div class="glassmorphism-card rounded-lg">
                             <div class="p-6 border-b border-gray-300">
-                                <h3 class="text-lg font-bold text-white glass-heading">Quick Actions</h3>
+                                <h3 class="text-lg font-bold glass-heading">Quick Actions</h3>
                             </div>
                             <div class="p-6">
                                 <div class="space-y-3">
-                                    <a href="{{ route('purchase-requests.create') }}" class="flex items-center p-3 text-white glass-text rounded-lg hover:bg-white/10 transition border border-white/20">
+                                    <a href="{{ route('purchase-requests.create') }}" class="flex items-center p-3 glass-text rounded-lg hover:bg-white/10 transition border border-white/20">
                                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                         </svg>
                                         Create New PR
                                     </a>
-                                    <a href="{{ route('purchase-requests.index') }}" class="flex items-center p-3 text-white glass-text rounded-lg hover:bg-white/10 transition border border-white/20">
+                                    <a href="{{ route('purchase-requests.index') }}" class="flex items-center p-3 glass-text rounded-lg hover:bg-white/10 transition border border-white/20">
                                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                                         </svg>
@@ -885,9 +885,6 @@
                             <div class="p-6 border-b border-gray-300">
                                 <div class="flex items-center justify-between">
                                     <h2 class="text-xl font-bold text-white glass-heading">My Purchase Requests</h2>
-                                    <a href="{{ route('purchase-requests.create') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                                        + New PR
-                                    </a>
                                 </div>
                             </div>
                             <div class="p-6">
@@ -950,12 +947,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                         </svg>
                                         <h3 class="mt-2 text-sm font-medium text-white glass-text">No purchase requests</h3>
-                                        <p class="mt-1 text-sm text-white glass-text">Get started by creating a new purchase request.</p>
-                                        <div class="mt-6">
-                                            <a href="{{ route('purchase-requests.create') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                                                Create your first PR
-                                            </a>
-                                        </div>
+                                        <p class="mt-1 text-sm text-white glass-text">You don’t have any purchase requests yet.</p>
                                     </div>
                                 @endif
                             </div>
@@ -972,12 +964,6 @@
                             </div>
                             <div class="p-6">
                                 <div class="space-y-3">
-                                    <a href="{{ route('purchase-requests.create') }}" class="flex items-center p-3 text-white glass-text rounded-lg hover:bg-white/10 transition border border-white/20">
-                                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                        </svg>
-                                        Create New PR
-                                    </a>
                                     <a href="{{ route('purchase-requests.index') }}" class="flex items-center p-3 text-white glass-text rounded-lg hover:bg-white/10 transition border border-white/20">
                                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
