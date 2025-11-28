@@ -52,8 +52,28 @@ fi
 php artisan config:clear || true
 php artisan config:cache || true
 
+# Log DB target to aid debugging
+echo "DB_CONNECTION=${DB_CONNECTION:-}"
+if [ -n "${DATABASE_URL:-}" ]; then
+  echo "DATABASE_URL is set"
+else
+  echo "DATABASE_URL is NOT set"
+fi
+
 if [ "${SKIP_AUTO_MIGRATE:-false}" != "true" ]; then
-  php artisan migrate --force || true
+  RETRIES="${MIGRATE_RETRIES:-1}"
+  SLEEP_SECS="${MIGRATE_SLEEP:-5}"
+  ATTEMPT=1
+  until php artisan migrate --force; do
+    echo "Migration attempt ${ATTEMPT}/${RETRIES} failed"
+    if [ "$ATTEMPT" -ge "$RETRIES" ]; then
+      echo "Migrations failed after ${RETRIES} attempts; continuing startup"
+      break
+    fi
+    ATTEMPT=$((ATTEMPT+1))
+    echo "Retrying in ${SLEEP_SECS}s..."
+    sleep "$SLEEP_SECS"
+  done
   if [ "${RUN_DB_SEED:-false}" = "true" ]; then
     php artisan db:seed --force || true
   fi
