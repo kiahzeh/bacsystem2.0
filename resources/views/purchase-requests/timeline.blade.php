@@ -236,44 +236,6 @@
                     </div>
                 @endif
 
-                <!-- Filter & Quick-Jump -->
-                <div class="mb-8 glassmorphism-card rounded-lg p-4">
-                    <div class="flex items-center justify-between mb-2">
-                        <h3 class="text-lg font-semibold">Filter & Quick-Jump</h3>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div>
-                            <label for="statusFilter" class="block text-xs text-white/70 mb-1">Status</label>
-                            <select id="statusFilter" class="w-full px-3 py-2 rounded-lg glass-input focus:outline-none focus:ring-2 focus:ring-orange-400/50">
-                                <option value="">All</option>
-                                <option value="completed">Completed</option>
-                                <option value="skipped">Skipped</option>
-                                <option value="inprogress">In Progress</option>
-                                <option value="pending">Pending</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="actorFilter" class="block text-xs text-white/70 mb-1">Actor</label>
-                            <input id="actorFilter" type="text" placeholder="Actor name..." class="w-full px-3 py-2 rounded-lg glass-input focus:outline-none focus:ring-2 focus:ring-orange-400/50" />
-                        </div>
-                        <div>
-                            <label for="dateFromFilter" class="block text-xs text-white/70 mb-1">From Date</label>
-                            <input id="dateFromFilter" type="date" class="w-full px-3 py-2 rounded-lg glass-input focus:outline-none focus:ring-2 focus:ring-orange-400/50" />
-                        </div>
-                        <div>
-                            <label for="quickJump" class="block text-xs text-white/70 mb-1">Quick Jump</label>
-                            <div class="flex items-center space-x-2">
-                                <select id="quickJump" class="flex-1 px-3 py-2 rounded-lg glass-input focus:outline-none focus:ring-2 focus:ring-orange-400/50">
-                                    @foreach($allStatuses as $i => $s)
-                                        <option value="step-{{ $i + 1 }}">Step {{ $i + 1 }}: {{ $s }}</option>
-                                    @endforeach
-                                </select>
-                                <button id="quickJumpBtn" type="button" class="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/40 text-blue-200 hover:text-blue-100 rounded-lg text-sm font-medium transition">Go</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Enhanced Timeline -->
                 <div class="mt-16">
                     <div class="space-y-6">
