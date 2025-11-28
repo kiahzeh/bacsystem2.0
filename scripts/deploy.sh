@@ -8,6 +8,18 @@ echo "==> Starting deploy"
 echo "==> Composer install (prod)"
 composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
 
+# Ensure SQLite database file exists when using sqlite
+if [ "${DB_CONNECTION:-}" = "sqlite" ]; then
+  echo "==> Ensure SQLite database file"
+  DB_FILE="${DB_DATABASE:-database/database.sqlite}"
+  DB_DIR="$(dirname "$DB_FILE")"
+  mkdir -p "$DB_DIR" || true
+  if [ ! -f "$DB_FILE" ]; then
+    echo "Creating $DB_FILE"
+    touch "$DB_FILE" || true
+  fi
+fi
+
 # Respect APP_KEY from environment; only generate if truly missing and .env exists
 if [ -z "${APP_KEY:-}" ]; then
   if [ -f .env ] && ( ! grep -q '^APP_KEY=' .env || grep -q '^APP_KEY=$' .env ); then
