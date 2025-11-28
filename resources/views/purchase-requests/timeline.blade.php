@@ -240,7 +240,6 @@
                 <div class="mb-8 glassmorphism-card rounded-lg p-4">
                     <div class="flex items-center justify-between mb-2">
                         <h3 class="text-lg font-semibold">Filter & Quick-Jump</h3>
-                        <span class="px-2 py-1 text-xs rounded bg-orange-500/20 text-orange-200">Bro</span>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
