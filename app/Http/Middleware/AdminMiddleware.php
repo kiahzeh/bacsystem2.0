@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use App\Models\User;
 
 class AdminMiddleware
 {
@@ -21,20 +22,16 @@ class AdminMiddleware
 
         $user = auth()->user();
         $isAdmin = false;
-        if ($user) {
-            // Prefer explicit role or flag
-            if (isset($user->role) && $user->role === 'admin') {
+        if ($user instanceof User) {
+            if ($user->role === 'admin') {
                 $isAdmin = true;
-            } elseif (isset($user->is_admin) && ((int) $user->is_admin === 1 || $user->is_admin === true)) {
+            } elseif (((int) $user->is_admin === 1) || ($user->is_admin === true)) {
                 $isAdmin = true;
-            } elseif (method_exists($user, 'isAdmin')) {
-                // Fallback to method if present
+            } else {
                 try {
                     $isAdmin = (bool) $user->isAdmin();
                 } catch (\Throwable $e) {
-                    // Use exception to avoid IDE warnings and aid debugging
                     report($e);
-                    $isAdmin = false;
                 }
             }
         }

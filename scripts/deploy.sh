@@ -32,8 +32,21 @@ else
   echo "==> APP_KEY provided via environment; skipping generation"
 fi
 
-echo "==> Run migrations"
-php artisan migrate --force --no-seed
+echo "==> Run database migrations"
+# Support seeding on deploy via environment flags
+# - Set SEED_ON_DEPLOY=true to seed on deploy
+# - Optionally set SEEDER_CLASS=YourSeeder to run a specific seeder
+if [ "${SEED_ON_DEPLOY:-false}" = "true" ]; then
+  echo "==> Migrate with seeding enabled"
+  if [ -n "${SEEDER_CLASS:-}" ]; then
+    php artisan migrate --force
+    php artisan db:seed --class="${SEEDER_CLASS}" --force
+  else
+    php artisan migrate --force --seed
+  fi
+else
+  php artisan migrate --force
+fi
 
 echo "==> Storage link"
 php artisan storage:link || true

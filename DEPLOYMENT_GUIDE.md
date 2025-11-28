@@ -30,9 +30,8 @@ APP_DEBUG=false
 APP_URL=https://your-app-name.railway.app
 APP_KEY=base64:<paste-generated-key>
 
-DB_CONNECTION=pgsql
-DATABASE_URL=<paste-from-railway-postgres-plugin>
-DB_SSLMODE=require
+DB_CONNECTION=sqlite
+DB_DATABASE=/var/www/html/storage/database.sqlite
 
 MAIL_MAILER=smtp
 MAIL_HOST=smtp-relay.brevo.com
@@ -46,7 +45,8 @@ MAIL_PASSWORD=<optional>
 MIGRATE_RETRIES=10
 MIGRATE_SLEEP=5
 SKIP_AUTO_MIGRATE=false
-RUN_DB_SEED=false
+SEED_ON_DEPLOY=true
+SEEDER_CLASS=DatabaseSeeder
 
 BREVO_KEY=<paste-your-brevo-api-key>
 TWILIO_ACCOUNT_SID=<paste-your-twilio-sid>
@@ -191,10 +191,18 @@ databases:
    ```
 
 5. **Optional: Use Deploy Script Locally/On Server**
-   ```bash
-   bash scripts/deploy.sh
-   ```
+```bash
+bash scripts/deploy.sh
+```
    This installs prod dependencies, runs migrations, builds assets, and caches config/routes/views.
+
+### Seeding on Deploy
+
+- Enable seeding by setting `SEED_ON_DEPLOY=true` in your environment.
+- To run a specific seeder, set `SEEDER_CLASS=YourSeederClass`.
+- Behavior:
+  - When `SEEDER_CLASS` is provided, the script runs `migrate --force` then `db:seed --class=SEEDER_CLASS --force`.
+  - Otherwise, it runs `migrate --force --seed` which triggers `DatabaseSeeder`.
 
 ---
 
