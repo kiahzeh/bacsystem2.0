@@ -5,8 +5,9 @@ namespace App\Notifications;
 use App\Models\PurchaseRequest;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class PurchaseRequestUpdated extends Notification
+class PurchaseRequestUpdated extends Notification implements ShouldQueue
 {
     protected $purchaseRequest;
     protected $oldStatus;

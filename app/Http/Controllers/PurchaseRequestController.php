@@ -444,6 +444,9 @@ class PurchaseRequestController extends Controller
     {
         $this->authorize('update', $purchaseRequest);
 
+        // Ensure department relationship is available for recipient selection
+        $purchaseRequest->loadMissing('department');
+
         $steps = $purchaseRequest->workflow_steps ?? [];
         if (!isset($steps[$stepIndex])) {
             return redirect()->route('purchase-requests.timeline', $purchaseRequest)
@@ -501,9 +504,9 @@ class PurchaseRequestController extends Controller
             $purchaseRequest->save();
         }
 
-        // Notify all other users about the skipped step
-        $allUsers = User::where('id', '!=', auth()->id())->get();
-        foreach ($allUsers as $user) {
+        // Notify relevant recipients (department head, procurement, admins)
+        $recipients = $this->getWorkflowRecipients($purchaseRequest);
+        foreach ($recipients as $user) {
             $user->notify(new PurchaseRequestUpdated($purchaseRequest, $oldStatus, 'step_skipped'));
         }
 
@@ -531,6 +534,9 @@ class PurchaseRequestController extends Controller
     public function nextWorkflowStep(Request $request, PurchaseRequest $purchaseRequest, $stepIndex)
     {
         $this->authorize('update', $purchaseRequest);
+
+        // Ensure department relationship is available for recipient selection
+        $purchaseRequest->loadMissing('department');
 
         $steps = $purchaseRequest->workflow_steps ?? [];
         if (!isset($steps[$stepIndex])) {
@@ -566,9 +572,9 @@ class PurchaseRequestController extends Controller
             ]
         );
 
-        // Notify other users of advancement
-        $allUsers = User::where('id', '!=', auth()->id())->get();
-        foreach ($allUsers as $user) {
+        // Notify relevant recipients (department head, procurement, admins)
+        $recipients = $this->getWorkflowRecipients($purchaseRequest);
+        foreach ($recipients as $user) {
             $user->notify(new PurchaseRequestUpdated($purchaseRequest, $oldStatus, 'status_advanced'));
         }
 
@@ -593,6 +599,9 @@ class PurchaseRequestController extends Controller
     public function removeWorkflowStep(Request $request, PurchaseRequest $purchaseRequest, $stepIndex)
     {
         $this->authorize('update', $purchaseRequest);
+
+        // Ensure department relationship is available for recipient selection
+        $purchaseRequest->loadMissing('department');
 
         $steps = $purchaseRequest->workflow_steps ?? [];
         if (!isset($steps[$stepIndex])) {
@@ -631,14 +640,40 @@ class PurchaseRequestController extends Controller
             $purchaseRequest->save();
         }
 
-        // Notify other users that a step was removed
-        $allUsers = User::where('id', '!=', auth()->id())->get();
-        foreach ($allUsers as $user) {
+        // Notify relevant recipients (department head, procurement, admins)
+        $recipients = $this->getWorkflowRecipients($purchaseRequest);
+        foreach ($recipients as $user) {
             $user->notify(new PurchaseRequestUpdated($purchaseRequest, $oldStatus, 'step_removed'));
         }
 
         return redirect()->route('purchase-requests.timeline', $purchaseRequest)
             ->with('success', "Step '{$stepName}' has been removed.");
+    }
+
+    /**
+     * Select relevant recipients for workflow updates.
+     * Includes department head, procurement users, and admins; excludes the actor.
+     */
+    private function getWorkflowRecipients(PurchaseRequest $purchaseRequest)
+    {
+        $actorId = auth()->id();
+        $recipients = collect();
+
+        // Department head
+        if ($purchaseRequest->department && $purchaseRequest->department->head) {
+            $recipients->push($purchaseRequest->department->head);
+        }
+
+        // Procurement users
+        $recipients = $recipients->merge(User::where('role', 'procurement')->get());
+
+        // Admins
+        $recipients = $recipients->merge(User::where('role', 'admin')->get());
+
+        // Unique by user id and exclude actor
+        return $recipients->unique('id')->filter(function ($user) use ($actorId) {
+            return $user->id !== $actorId;
+        });
     }
 
     public function generateMonthlyReport(Request $request)
