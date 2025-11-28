@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Department;
+use Illuminate\Support\Facades\Schema;
 
 class DepartmentSeeder extends Seeder
 {
@@ -13,6 +14,12 @@ class DepartmentSeeder extends Seeder
      */
     public function run(): void
     {
+        // Skip if the table doesn't exist (e.g., migrations failed on startup)
+        if (!Schema::hasTable('departments')) {
+            echo "[DepartmentSeeder] departments table missing; skipping seeding.\n";
+            return;
+        }
+
         $departments = [
             [
                 'name' => 'Admin',
@@ -41,15 +48,10 @@ class DepartmentSeeder extends Seeder
         ];
 
         foreach ($departments as $department) {
-            try {
-                Department::updateOrCreate(
-                    ['name' => $department['name']],
-                    $department
-                );
-            } catch (\Exception $e) {
-                // Department might already exist, continue
-                echo "Department {$department['name']} already exists, skipping...\n";
-            }
+            Department::updateOrCreate(
+                ['name' => $department['name']],
+                $department
+            );
         }
     }
 

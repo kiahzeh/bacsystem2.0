@@ -7,6 +7,7 @@ use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Department;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class UserSeeder extends Seeder
 {
@@ -15,7 +16,17 @@ class UserSeeder extends Seeder
      */
     public function run(): void
 {
+    // Ensure required tables exist; otherwise skip to avoid fatal errors
+    if (!Schema::hasTable('users') || !Schema::hasTable('departments')) {
+        echo "[UserSeeder] required tables missing (users or departments); skipping seeding.\n";
+        return;
+    }
+
     $departments = Department::pluck('id')->toArray();
+    if (count($departments) === 0) {
+        echo "[UserSeeder] no departments found; skipping user generation.\n";
+        return;
+    }
 
     for ($i = 1; $i <= 10; $i++) {
         User::updateOrCreate(
