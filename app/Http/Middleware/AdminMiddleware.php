@@ -32,6 +32,8 @@ class AdminMiddleware
                 try {
                     $isAdmin = (bool) $user->isAdmin();
                 } catch (\Throwable $e) {
+                    // Use exception to avoid IDE warnings and aid debugging
+                    report($e);
                     $isAdmin = false;
                 }
             }
