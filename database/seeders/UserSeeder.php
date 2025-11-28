@@ -29,27 +29,40 @@ class UserSeeder extends Seeder
     }
 
     for ($i = 1; $i <= 10; $i++) {
+        $values = [
+            'name' => 'User ' . $i,
+            'password' => Hash::make('password'),
+            'department_id' => $departments[array_rand($departments)],
+        ];
+        if (Schema::hasColumn('users', 'role')) {
+            $values['role'] = 'user';
+        }
+        if (Schema::hasColumn('users', 'is_admin')) {
+            $values['is_admin'] = false;
+        }
         User::updateOrCreate(
             ['email' => 'user' . $i . '@example.com'],
-            [
-                'name' => 'User ' . $i,
-                'password' => Hash::make('password'),
-                'department_id' => $departments[array_rand($departments)],
-            ]
+            $values
         );
     }
 
     $namedDepartments = Department::where('name', '!=', 'Admin')->get();
 
     foreach ($namedDepartments as $department) {
+        $values = [
+            'name' => $department->name . ' User',
+            'password' => Hash::make('password'),
+            'department_id' => $department->id,
+        ];
+        if (Schema::hasColumn('users', 'role')) {
+            $values['role'] = 'user';
+        }
+        if (Schema::hasColumn('users', 'is_admin')) {
+            $values['is_admin'] = false;
+        }
         User::updateOrCreate(
             ['email' => strtolower($department->name) . '@example.com'],
-            [
-                'name' => $department->name . ' User',
-                'password' => Hash::make('password'),
-                'department_id' => $department->id,
-                'role' => 'user',
-            ]
+            $values
         );
     }
 
@@ -60,16 +73,21 @@ class UserSeeder extends Seeder
 
     $adminDeptId = Department::where('name', 'Admin')->value('id') ?? ($departments[0] ?? null);
 
+    $adminValues = [
+        'name' => $adminName,
+        'password' => Hash::make($adminPassword),
+        'department_id' => $adminDeptId ?? ($namedDepartments->random()->id ?? $departments[0]),
+        'email_verified_at' => now(),
+    ];
+    if (Schema::hasColumn('users', 'role')) {
+        $adminValues['role'] = 'admin';
+    }
+    if (Schema::hasColumn('users', 'is_admin')) {
+        $adminValues['is_admin'] = true;
+    }
     User::updateOrCreate(
         ['email' => $adminEmail],
-        [
-            'name' => $adminName,
-            'password' => Hash::make($adminPassword),
-            'department_id' => $adminDeptId ?? ($namedDepartments->random()->id ?? $departments[0]),
-            'role' => 'admin',
-            'is_admin' => true,
-            'email_verified_at' => now(),
-        ]
+        $adminValues
     );
 }
 
