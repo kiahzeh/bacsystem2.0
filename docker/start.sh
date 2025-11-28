@@ -48,6 +48,12 @@ if [ ! -L /var/www/html/public/storage ]; then
   php artisan storage:link || true
 fi
 
+# Proactively clear caches to avoid stale compiled views/routes/config
+php artisan optimize:clear || true
+php artisan view:clear || true
+php artisan route:clear || true
+php artisan cache:clear || true
+
 # Refresh config and run migrations if not skipped
 php artisan config:clear || true
 php artisan config:cache || true
