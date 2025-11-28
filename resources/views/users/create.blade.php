@@ -1,14 +1,14 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-semibold text-xl text-white leading-tight glass-heading">
             {{ __('Create User') }}
         </h2>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
+            <div class="glassmorphism-card overflow-hidden sm:rounded-lg">
+                <div class="p-6 text-white glass-text">
                     <form method="POST" action="{{ route('users.store') }}" class="space-y-6">
                         @csrf
 
@@ -48,7 +48,7 @@
                         <div class="mt-4">
                             <x-input-label for="department_id" :value="__('Department')" />
                             <select id="department_id" name="department_id"
-                                class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                class="block mt-1 w-full glassmorphism-input"
                                 required>
                                 <option value="">Select Department</option>
                                 @foreach($departments as $department)
@@ -64,7 +64,7 @@
                         <div class="mt-4">
                             <x-input-label for="role" :value="__('Role')" />
                             <select id="role" name="role"
-                                class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                class="block mt-1 w-full glassmorphism-input"
                                 required>
                                 <option value="user" {{ old('role') == 'user' ? 'selected' : '' }}>User</option>
                                 <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
@@ -73,10 +73,10 @@
                         </div>
 
                         <div class="flex items-center justify-end mt-4">
-                            <x-secondary-button onclick="window.location='{{ route('users.index') }}'" type="button"
-                                class="mr-3">
+                            <a href="{{ route('users.index') }}"
+                               class="inline-flex items-center px-4 py-2 rounded-full font-semibold text-xs uppercase tracking-widest glass-badge bg-white/10 text-white border border-white/20 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-0 disabled:opacity-50 transition ease-in-out duration-150 mr-3">
                                 {{ __('Cancel') }}
-                            </x-secondary-button>
+                            </a>
                             <x-primary-button>
                                 {{ __('Create User') }}
                             </x-primary-button>

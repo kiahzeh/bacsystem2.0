@@ -108,7 +108,7 @@
                         <form method="GET" action="{{ route('users.index') }}" id="searchForm" class="flex items-center space-x-4">
                             <div class="flex-1 relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="h-5 w-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>
                                 </div>
@@ -132,20 +132,20 @@
                                      x-transition:leave="transition ease-in duration-150"
                                      x-transition:leave-start="opacity-100 scale-100"
                                      x-transition:leave-end="opacity-0 scale-95"
-                                     class="absolute z-50 w-full mt-1 bg-white/95 backdrop-blur-xl rounded-lg shadow-2xl border border-white/20 max-h-60 overflow-y-auto">
+                                     class="absolute z-50 w-full mt-1 bg-white/10 text-white backdrop-blur-xl rounded-lg shadow-2xl border border-white/20 max-h-60 overflow-y-auto">
                                     
                                     <template x-for="(user, index) in suggestions" :key="user.id">
                                         <div @click="selectSuggestion(user)"
                                              @mouseenter="selectedIndex = index"
                                              :class="{
-                                                 'bg-violet-500 text-white': selectedIndex === index,
-                                                 'hover:bg-violet-100 text-gray-800': selectedIndex !== index
+                                                 'bg-violet-500/30 text-white': selectedIndex === index,
+                                                 'hover:bg-violet-500/10 text-white': selectedIndex !== index
                                              }"
                                              class="px-4 py-3 cursor-pointer transition-colors duration-150 flex items-center space-x-3">
                                             
                                             <!-- User Avatar -->
                                             <div class="flex-shrink-0">
-                                                <div class="w-8 h-8 rounded-full bg-violet-500 flex items-center justify-center text-white font-medium text-sm">
+                                                <div class="w-8 h-8 rounded-full bg-violet-500/40 flex items-center justify-center text-white font-medium text-sm">
                                                     <span x-text="user.name.charAt(0).toUpperCase()"></span>
                                                 </div>
                                             </div>
@@ -160,8 +160,8 @@
                                             <!-- Role Badge -->
                                             <div class="flex-shrink-0">
                                                 <span :class="{
-                                                    'bg-purple-100 text-purple-800': user.role === 'admin',
-                                                    'bg-blue-100 text-blue-800': user.role === 'user'
+                                                    'bg-purple-500/20 text-purple-200': user.role === 'admin',
+                                                    'bg-blue-500/20 text-blue-200': user.role === 'user'
                                                 }" 
                                                       class="px-2 py-1 text-xs rounded-full font-medium"
                                                       x-text="user.role.charAt(0).toUpperCase() + user.role.slice(1)">
@@ -172,14 +172,14 @@
                                     
                                     <!-- No Results -->
                                     <div x-show="suggestions.length === 0 && search.length > 0" 
-                                         class="px-4 py-3 text-gray-500 text-center">
+                                         class="px-4 py-3 text-white/70 text-center">
                                         No users found matching "<span x-text="search"></span>"
                                     </div>
                                 </div>
                             </div>
                             <button 
                                 type="submit"
-                                class="bg-violet-500 hover:bg-violet-600 text-white px-6 py-3 rounded-md font-medium transition-colors duration-200 flex items-center"
+                                class="glass-badge bg-violet-500/20 text-violet-200 px-6 py-2 rounded-full font-medium transition-colors duration-200 flex items-center hover:bg-violet-500/30"
                             >
                                 <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -189,7 +189,7 @@
                             @if(request('search'))
                                 <a 
                                     href="{{ route('users.index') }}" 
-                                    class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-md font-medium transition-colors duration-200 flex items-center"
+                                    class="glass-badge bg-gray-500/20 text-gray-200 px-4 py-2 rounded-full font-medium transition-colors duration-200 flex items-center hover:bg-gray-500/30"
                                 >
                                     <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -210,7 +210,7 @@
                     <div class="overflow-x-auto glassmorphism-card rounded-lg overflow-y-auto relative">
                         <table class="min-w-full table-auto border-collapse">
                             <thead>
-                                <tr class="bg-gray-50/60 text-white uppercase text-sm leading-normal">
+                                <tr class="glassmorphism-header text-white uppercase text-sm leading-normal">
                                     <th class="py-3 px-6 text-left font-semibold glass-table-heading">Name</th>
                                     <th class="py-3 px-6 text-left font-semibold glass-table-heading">Email</th>
                                     <th class="py-3 px-6 text-left font-semibold glass-table-heading">Department</th>
@@ -267,15 +267,19 @@
                                             </div>
                                         </td>
                                         <td class="py-4 px-6">
-                                            <span
-                                                class="px-3 py-1 rounded-full text-sm font-semibold bg-white text-gray-800 {{ $user->role === 'admin' ? 'border-2 border-purple-300' : 'border-2 border-blue-300' }}">
+                                            @php
+                                                $roleClass = $user->role === 'admin'
+                                                    ? 'bg-purple-500/20 text-purple-200'
+                                                    : 'bg-blue-500/20 text-blue-200';
+                                            @endphp
+                                            <span class="px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap glass-badge {{ $roleClass }}">
                                                 {{ ucfirst($user->role) }}
                                             </span>
                                         </td>
                                         <td class="py-4 px-6">
                                             <div class="flex items-center space-x-3">
-                                                <a href="{{ route('users.edit', $user) }}"
-                                                    class="text-white bg-green-600 hover:bg-green-700 flex items-center px-3 py-1 rounded-md transition-all duration-200 shadow-sm">
+                                                <a href="{{ route('users.edit', $user) }}" title="Edit" aria-label="Edit"
+                                                    class="inline-flex items-center glass-badge bg-green-500/20 text-green-200 px-3 py-1 rounded-full transition-all duration-200 shadow-sm hover:bg-green-500/30">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none"
                                                         viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -286,19 +290,16 @@
                                                 </a>
                                                 @if($user->id !== auth()->id())
                                                     <form action="{{ route('users.destroy', $user) }}" method="POST"
-                                                        class="inline-flex items-center">
+                                                        class="inline-flex items-center"
+                                                        onsubmit="return confirm('Are you sure you want to delete this user?');">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit"
-                                                            class="text-red-600 hover:text-red-900 flex items-center bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition-all duration-200 shadow-sm"
-                                                            onclick="return confirm('Are you sure you want to delete this user?')">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1"
-                                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    stroke-width="2"
+                                                        <button type="submit" title="Delete" aria-label="Delete"
+                                                            class="inline-flex items-center glass-badge bg-red-500/20 text-red-200 px-2 py-1 rounded-full transition-all duration-200 shadow-sm hover:bg-red-500/30">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                             </svg>
-                                                            <span class="font-medium">Delete</span>
                                                         </button>
                                                     </form>
                                                 @endif

@@ -249,6 +249,31 @@
     box-shadow: 0 4px 20px rgba(30, 58, 138, 0.1);
 }
 
+/* Glass table heading for consistent readability */
+.glass-table-heading {
+    color: rgba(255, 255, 255, 0.95);
+    letter-spacing: 0.02em;
+}
+
+/* Glass badge for status pills and mode labels */
+.glass-badge {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: saturate(160%) blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
+}
+
+.glass-badge:hover {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+/* Dark mode tweaks for badges */
+.dark .glass-badge {
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
 .light .glassmorphism-input {
     background: rgba(255, 255, 255, 0.95);
     color: #1f2937;

@@ -78,13 +78,13 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     <span class="text-white/80 dark:text-gray-300 w-24">Mode of Procurement:</span>
-                                    <span class="ml-2 px-3 py-1 rounded-full text-sm font-semibold
+                                    <span class="ml-2 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap glass-badge
                                         @if($purchaseRequest->mode_of_procurement == 'Alternative')
-                                            bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100
+                                            bg-blue-500/20 text-blue-200
                                         @elseif($purchaseRequest->mode_of_procurement == 'Competitive')
-                                            bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100
+                                            bg-emerald-500/20 text-emerald-200
                                         @else
-                                            bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100
+                                            bg-gray-500/20 text-gray-200
                                         @endif">
                                         {{ $purchaseRequest->mode_of_procurement }}
                                     </span>
@@ -141,7 +141,7 @@
 
                         
 
-                        <div class="bg-transparent dark:bg-slate-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
+                        <div class="bg-white/5 p-6 rounded-lg shadow-sm border border-white/20 glassmorphism-card">
                             <h3 class="text-lg font-medium text-white dark:text-white mb-4 flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -258,7 +258,7 @@
                             </h3>
                             <p class="text-white/80 dark:text-gray-300 mb-4">Complete this purchase request by providing final details.</p>
                             <a href="{{ route('purchase-requests.complete', $purchaseRequest) }}" 
-                               class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md transition">
+                               class="inline-flex items-center px-4 py-2 rounded-full font-semibold glass-badge bg-green-500/20 text-green-200 hover:bg-green-500/30 transition">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
