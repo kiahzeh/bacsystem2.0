@@ -25,7 +25,7 @@ FROM php:8.2-apache
 ARG RAILWAY_SERVICE_ID
 ENV RAILWAY_SERVICE_ID=${RAILWAY_SERVICE_ID}
 
-# System libs for PHP extensions
+# System libs for PHP extensions and sqlite CLI for db:load
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         libpng-dev \
@@ -37,6 +37,7 @@ RUN apt-get update \
         unzip \
         libpq-dev \
         libsqlite3-dev \
+        sqlite3 \
         libonig-dev \
         pkg-config \
     && rm -rf /var/lib/apt/lists/*
