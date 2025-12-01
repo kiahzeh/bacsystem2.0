@@ -31,7 +31,8 @@ chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # If using SQLite, ensure the database file exists and is writable
 if [ "${DB_CONNECTION:-}" = "sqlite" ]; then
-  DB_FILE="${DB_DATABASE:-/var/www/html/database/database.sqlite}"
+  # Default to Render's persistent disk location when DB_DATABASE is not explicitly set
+  DB_FILE="${DB_DATABASE:-/var/data/database.sqlite}"
   DB_DIR="$(dirname "$DB_FILE")"
   mkdir -p "$DB_DIR"
   if [ ! -f "$DB_FILE" ]; then
