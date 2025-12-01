@@ -42,7 +42,7 @@
     @endif
 
     <div class="mt-8 text-sm">
-        <a href="{{ route('verify-otp') }}" class="underline text-gray-600 hover:text-gray-900">Verify Email with OTP</a>
+        <a href="{{ route('otp.verify.show') }}" class="underline text-gray-600 hover:text-gray-900">Verify Email with OTP</a>
         <span class="mx-2">•</span>
         <a href="{{ route('login') }}" class="underline text-gray-600 hover:text-gray-900">Go to Sign in</a>
     </div>
