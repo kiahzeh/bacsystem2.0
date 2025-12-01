@@ -5,6 +5,10 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /robots.txt
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
       - key: APP_ENV
         value: production
@@ -24,11 +28,9 @@ services:
       - key: QUEUE_CONNECTION
         value: database
       - key: DB_CONNECTION
-        value: pgsql
-      - key: DATABASE_URL
-        sync: false
-      - key: DB_SSLMODE
-        value: require
+        value: sqlite
+      - key: DB_DATABASE
+        value: /var/data/database.sqlite
       - key: MIGRATE_RETRIES
         value: 10
       - key: MIGRATE_SLEEP
@@ -63,6 +65,10 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     dockerCommand: bash -lc "php artisan queue:work --sleep=1 --tries=3"
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
       - key: APP_ENV
         value: production
@@ -81,11 +87,9 @@ services:
       - key: QUEUE_CONNECTION
         value: database
       - key: DB_CONNECTION
-        value: pgsql
-      - key: DATABASE_URL
-        sync: false
-      - key: DB_SSLMODE
-        value: require
+        value: sqlite
+      - key: DB_DATABASE
+        value: /var/data/database.sqlite
       - key: MAIL_MAILER
         value: smtp
       - key: MAIL_HOST

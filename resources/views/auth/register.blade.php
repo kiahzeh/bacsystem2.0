@@ -26,6 +26,20 @@
                 <p class="text-white/70 text-sm">Join our procurement system today</p>
             </div>
 
+            <!-- Info Banner: OTP + Admin Approval -->
+            <div class="mb-6 bg-blue-500/20 border border-blue-300/30 text-blue-100 px-4 py-3 rounded-xl">
+                <div class="font-semibold mb-1">Sign-up requires email verification and admin approval</div>
+                <ul class="text-sm list-disc list-inside space-y-1">
+                    <li>We’ll email a 6-digit OTP. It expires in 10 minutes.</li>
+                    <li>Enter the OTP to verify your email.</li>
+                    <li>An admin must approve your account before you can sign in.</li>
+                </ul>
+                <div class="mt-2 text-xs">
+                    You can check approval status here: 
+                    <a href="{{ route('approval.status') }}" class="underline text-blue-200 hover:text-blue-50">Approval Status</a>
+                </div>
+            </div>
+
             <!-- Registration Form -->
             <form method="POST" action="{{ route('register') }}" class="space-y-6">
                 @csrf

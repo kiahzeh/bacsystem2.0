@@ -103,6 +103,15 @@ class UserController extends Controller
             ->with('success', 'User deleted successfully.');
     }
 
+    public function approve(User $user)
+    {
+        $user->is_approved = true;
+        $user->save();
+
+        return redirect()->route('users.index')
+            ->with('success', 'User approved successfully.');
+    }
+
     public function search(Request $request)
     {
         $query = $request->get('q', '');

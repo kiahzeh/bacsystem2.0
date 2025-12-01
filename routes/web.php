@@ -74,6 +74,7 @@ Route::middleware('auth')->group(function () {
     // Admin Routes
     Route::middleware('admin')->group(function () {
         Route::resource('users', UserController::class);
+        Route::patch('/users/{user}/approve', [UserController::class, 'approve'])->name('users.approve');
         Route::resource('departments', DepartmentController::class);
     });
 

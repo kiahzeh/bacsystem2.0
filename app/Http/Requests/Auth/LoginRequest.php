@@ -49,6 +49,22 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        // Post-auth checks: block access until email verified and admin approved
+        $user = Auth::user();
+        if (!$user || !$user->email_verified_at) {
+            Auth::logout();
+            throw ValidationException::withMessages([
+                'email' => 'Please verify your email with the OTP sent.',
+            ]);
+        }
+
+        if (!(bool)($user->is_approved ?? false)) {
+            Auth::logout();
+            throw ValidationException::withMessages([
+                'email' => 'Your account is pending admin approval.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

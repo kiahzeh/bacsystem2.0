@@ -215,6 +215,7 @@
                                     <th class="py-3 px-6 text-left font-semibold glass-table-heading">Email</th>
                                     <th class="py-3 px-6 text-left font-semibold glass-table-heading">Department</th>
                                     <th class="py-3 px-6 text-left font-semibold glass-table-heading">Role</th>
+                                    <th class="py-3 px-6 text-left font-semibold glass-table-heading">Status</th>
                                     <th class="py-3 px-6 text-left font-semibold glass-table-heading">Actions</th>
                                 </tr>
                             </thead>
@@ -277,6 +278,18 @@
                                             </span>
                                         </td>
                                         <td class="py-4 px-6">
+                                            @php
+                                                $approved = (bool) ($user->is_approved ?? false);
+                                                $statusClass = $approved
+                                                    ? 'bg-green-500/20 text-green-200'
+                                                    : 'bg-yellow-500/20 text-yellow-200';
+                                                $statusText = $approved ? 'Approved' : 'Pending Approval';
+                                            @endphp
+                                            <span class="px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap glass-badge {{ $statusClass }}">
+                                                {{ $statusText }}
+                                            </span>
+                                        </td>
+                                        <td class="py-4 px-6">
                                             <div class="flex items-center space-x-3">
                                                 <a href="{{ route('users.edit', $user) }}" title="Edit" aria-label="Edit"
                                                     class="inline-flex items-center glass-badge bg-green-500/20 text-green-200 px-3 py-1 rounded-full transition-all duration-200 shadow-sm hover:bg-green-500/30">
@@ -288,6 +301,21 @@
                                                     </svg>
                                                     <span class="font-medium">Edit</span>
                                                 </a>
+                                                @if(!($user->is_approved ?? false))
+                                                    <form action="{{ route('users.approve', $user) }}" method="POST"
+                                                        class="inline-flex items-center"
+                                                        onsubmit="return confirm('Approve this user?');">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <button type="submit" title="Approve" aria-label="Approve"
+                                                            class="inline-flex items-center glass-badge bg-indigo-500/20 text-indigo-200 px-3 py-1 rounded-full transition-all duration-200 shadow-sm hover:bg-indigo-500/30">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                            <span class="font-medium">Approve</span>
+                                                        </button>
+                                                    </form>
+                                                @endif
                                                 @if($user->id !== auth()->id())
                                                     <form action="{{ route('users.destroy', $user) }}" method="POST"
                                                         class="inline-flex items-center"

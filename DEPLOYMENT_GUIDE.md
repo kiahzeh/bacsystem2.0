@@ -314,6 +314,57 @@ BREVO_KEY=<optional-brevo-api-key>
 - Upload a document; View should open inline in a new tab; Download should work
 - Restart service; confirm database data persists (Neon)
 
+### Render with SQLite (Temporary Setup)
+
+Use this for quick demos/defences. It uses a persistent disk so your database survives redeploys.
+
+1) What’s configured (via `render.yaml`)
+- A persistent disk mounted at `/var/data`.
+- `DB_CONNECTION=sqlite` and `DB_DATABASE=/var/data/database.sqlite` by default.
+- Automatic migrations on start with retries.
+- Worker service for background jobs (sequential on SQLite).
+
+2) Environment variables (Web + Worker)
+```
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://<your-service>.onrender.com
+APP_KEY=base64:<run-locally: php artisan key:generate --show>
+
+FILESYSTEM_DISK=public
+SESSION_DRIVER=file
+CACHE_DRIVER=file
+
+DB_CONNECTION=sqlite
+DB_DATABASE=/var/data/database.sqlite
+
+MIGRATE_RETRIES=10
+MIGRATE_SLEEP=5
+SKIP_AUTO_MIGRATE=false
+RUN_DB_SEED=false
+
+MAIL_MAILER=smtp
+MAIL_HOST=smtp-relay.brevo.com
+MAIL_PORT=587
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=<your-email>
+MAIL_FROM_NAME=BAC System
+MAIL_USERNAME=<brevo-smtp-login>
+MAIL_PASSWORD=<brevo-smtp-password>
+
+BREVO_KEY=<optional-brevo-api-key>
+```
+
+3) Tips
+- Keep a single web instance; avoid autoscaling on SQLite.
+- The Worker runs `queue:work` and processes jobs one-by-one. If you see lock warnings under load, reduce throughput or temporarily set `QUEUE_CONNECTION=sync`.
+- For backups, download `/var/data/database.sqlite` periodically or copy to object storage.
+
+4) Upgrade to Postgres later
+- Attach a managed Postgres and set `DB_CONNECTION=pgsql` and `DATABASE_URL`.
+- Redeploy; migrations run automatically.
+- Optional data migration from SQLite: `sqlite3 database.sqlite .dump > dump.sql` → adjust types/indexes → import with `psql`.
+
 ### Free Tier Storage Considerations
 
 - Without a persistent disk, files in `storage/app/public` are reset on redeploys.

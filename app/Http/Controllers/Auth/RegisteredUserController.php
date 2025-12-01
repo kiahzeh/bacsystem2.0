@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\EmailOtp;
+use App\Notifications\EmailOtpNotification;
 use App\Providers\RouteServiceProvider;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash as HashFacade;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
@@ -41,12 +43,26 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'department_id' => 1, // Default department for new users
+            'is_approved' => false,
         ]);
 
-        event(new Registered($user));
+        // Generate and send OTP
+        $code = (string) random_int(100000, 999999);
+        $ttlMinutes = 10;
+        EmailOtp::create([
+            'user_id' => $user->id,
+            'code_hash' => HashFacade::make($code),
+            'expires_at' => now()->addMinutes($ttlMinutes),
+        ]);
 
-        Auth::login($user);
+        // Try notifying via email; swallow errors to avoid blocking registration
+        try {
+            $user->notify(new EmailOtpNotification($code, $ttlMinutes));
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
-        return redirect(RouteServiceProvider::HOME);
+        return redirect()->route('otp.verify.show')
+            ->with('success', 'Account created. Check your email for the OTP to verify. Admin approval is required after email verification.');
     }
 }

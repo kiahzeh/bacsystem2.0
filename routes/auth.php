@@ -9,6 +9,8 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\Auth\OtpVerificationController;
+use App\Http\Controllers\Auth\ApprovalStatusController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -21,6 +23,14 @@ Route::middleware('guest')->group(function () {
                 ->name('login');
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
+
+    // Email OTP verification
+    Route::get('verify-otp', [OtpVerificationController::class, 'show'])->name('otp.verify.show');
+    Route::post('verify-otp', [OtpVerificationController::class, 'verify'])->name('otp.verify.perform');
+    Route::post('verify-otp/resend', [OtpVerificationController::class, 'resend'])->name('otp.verify.resend');
+
+    // Approval status page
+    Route::get('approval-status', [ApprovalStatusController::class, 'show'])->name('approval.status');
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
                 ->name('password.request');
