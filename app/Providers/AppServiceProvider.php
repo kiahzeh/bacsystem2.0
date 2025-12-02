@@ -5,7 +5,9 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
 use App\Models\User;
+use App\Models\Department;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Hash;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,21 +28,79 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        // Ensure admin can log in by auto-verifying and approving the seeded admin
+        // Ensure admin can log in by auto-creating (if missing), verifying, and approving the seeded admin
         try {
             if (Schema::hasTable('users')) {
-                $adminEmail = env('ADMIN_EMAIL');
+                $adminEmail = config('app.admin_email');
                 if ($adminEmail) {
                     $admin = User::where('email', $adminEmail)->first();
+
+                    // If admin user does not exist, create it using environment values
+                    if (! $admin) {
+                        $adminPassword = (string) config('app.admin_password');
+                        $adminName = (string) config('app.admin_name');
+
+                        // Attempt to assign Admin department if available; otherwise any department; else null
+                        $deptId = null;
+                        if (Schema::hasTable('departments')) {
+                            $deptId = Department::where('name', 'Admin')->value('id')
+                                ?? Department::value('id');
+                        }
+
+                        $values = [
+                            'name' => $adminName,
+                            'email' => $adminEmail,
+                            'password' => Hash::make($adminPassword),
+                            'department_id' => $deptId,
+                            'email_verified_at' => now(),
+                        ];
+
+                        // Conditionally set columns if they exist
+                        if (Schema::hasColumn('users', 'role')) {
+                            $values['role'] = 'admin';
+                        }
+                        if (Schema::hasColumn('users', 'is_admin')) {
+                            $values['is_admin'] = true;
+                        }
+                        if (Schema::hasColumn('users', 'is_approved')) {
+                            $values['is_approved'] = true;
+                        }
+
+                        $admin = User::create($values);
+                    }
+
+                    // If admin exists, ensure verified and approved to prevent lockout
                     if ($admin) {
-                        $needsVerify = !$admin->email_verified_at;
-                        $needsApprove = !(bool)($admin->is_approved ?? false);
-                        $isAdmin = (bool)($admin->is_admin ?? false) || ($admin->role ?? null) === 'admin';
-                        if ($isAdmin && ($needsVerify || $needsApprove)) {
-                            $admin->forceFill([
+                        // Optionally force-reset admin credentials and privileges on boot
+                        $forceReset = filter_var(config('app.admin_reset_password_on_boot', false), FILTER_VALIDATE_BOOLEAN);
+                        if ($forceReset) {
+                            $resetPatch = [
+                                'password' => Hash::make((string) config('app.admin_password')),
                                 'email_verified_at' => $admin->email_verified_at ?: now(),
-                                'is_approved' => true,
-                            ])->save();
+                            ];
+                            if (Schema::hasColumn('users', 'role')) {
+                                $resetPatch['role'] = 'admin';
+                            }
+                            if (Schema::hasColumn('users', 'is_admin')) {
+                                $resetPatch['is_admin'] = true;
+                            }
+                            if (Schema::hasColumn('users', 'is_approved')) {
+                                $resetPatch['is_approved'] = true;
+                            }
+                            $admin->forceFill($resetPatch)->save();
+                        }
+
+                        $needsVerify = ! $admin->email_verified_at;
+                        $needsApprove = ! (bool) ($admin->is_approved ?? false);
+                        $isAdmin = (bool) ($admin->is_admin ?? false) || (($admin->role ?? null) === 'admin');
+                        if ($isAdmin && ($needsVerify || $needsApprove)) {
+                            $patch = [
+                                'email_verified_at' => $admin->email_verified_at ?: now(),
+                            ];
+                            if (Schema::hasColumn('users', 'is_approved')) {
+                                $patch['is_approved'] = true;
+                            }
+                            $admin->forceFill($patch)->save();
                         }
                     }
                 }

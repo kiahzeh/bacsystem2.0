@@ -214,4 +214,10 @@ return [
         'PDF' => Barryvdh\DomPDF\Facade\Pdf::class,
     ])->toArray(),
 
+    // Admin bootstrap settings sourced from environment
+    'admin_email' => env('ADMIN_EMAIL'),
+    'admin_password' => env('ADMIN_PASSWORD', 'password'),
+    'admin_name' => env('ADMIN_NAME', 'Admin User'),
+    'admin_reset_password_on_boot' => env('ADMIN_RESET_PASSWORD_ON_BOOT', false),
+
 ];
