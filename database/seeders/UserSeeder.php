@@ -85,6 +85,9 @@ class UserSeeder extends Seeder
     if (Schema::hasColumn('users', 'is_admin')) {
         $adminValues['is_admin'] = true;
     }
+    if (Schema::hasColumn('users', 'is_approved')) {
+        $adminValues['is_approved'] = true;
+    }
     User::updateOrCreate(
         ['email' => $adminEmail],
         $adminValues

@@ -14,7 +14,7 @@
         @csrf
         <div>
             <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus />
+            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email') ?? session('pending_email') ?? request('email')" required autofocus />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
@@ -31,7 +31,7 @@
 
             <form method="POST" action="{{ route('otp.verify.resend') }}" class="inline">
                 @csrf
-                <input type="hidden" name="email" value="{{ old('email') }}" />
+                <input type="hidden" name="email" value="{{ old('email') ?? session('pending_email') ?? request('email') }}" />
                 <button type="submit" class="underline text-sm text-gray-600 hover:text-gray-900">
                     Resend Code
                 </button>

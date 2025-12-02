@@ -1,5 +1,14 @@
 <x-guest-layout>
     <div class="mb-4 text-sm text-gray-600">
+        Your account requires email verification and admin approval. If you already received the OTP, proceed to verification.
+    </div>
+
+    <div class="flex items-center space-x-4">
+        <a href="{{ route('otp.verify.show', ['email' => auth()->user()->email ?? request('email')]) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+            Go to OTP Verification
+        </a>
+    </div>
+    <div class="mb-4 text-sm text-gray-600">
         Check your account’s email verification and admin approval status.
     </div>
 

@@ -61,10 +61,28 @@ php artisan config:cache || true
 
 # Log DB target to aid debugging
 echo "DB_CONNECTION=${DB_CONNECTION:-}"
+echo "DB_DATABASE=${DB_DATABASE:-}"
 if [ -n "${DATABASE_URL:-}" ]; then
   echo "DATABASE_URL is set"
 else
   echo "DATABASE_URL is NOT set"
+fi
+
+# Warn if SQLite DB path is not on the persistent disk
+if [ "${DB_CONNECTION:-}" = "sqlite" ]; then
+  DB_FILE_CHECK="${DB_DATABASE:-}"
+  case "$DB_FILE_CHECK" in
+    /var/data/*)
+      echo "SQLite DB is on persistent disk: $DB_FILE_CHECK"
+      ;;
+    "")
+      echo "WARNING: DB_DATABASE is empty for sqlite; defaulting to /var/data/database.sqlite"
+      ;;
+    *)
+      echo "WARNING: SQLite DB is NOT on persistent disk: $DB_FILE_CHECK"
+      echo "         Set DB_DATABASE to /var/data/database.sqlite for persistence across deploys"
+      ;;
+  esac
 fi
 
 if [ "${SKIP_AUTO_MIGRATE:-false}" != "true" ]; then

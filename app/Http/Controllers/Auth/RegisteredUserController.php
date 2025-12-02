@@ -63,6 +63,7 @@ class RegisteredUserController extends Controller
         }
 
         return redirect()->route('otp.verify.show')
+            ->with('pending_email', $user->email)
             ->with('success', 'Account created. Check your email for the OTP to verify. Admin approval is required after email verification.');
-    }
+}
 }

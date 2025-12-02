@@ -58,7 +58,9 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        if (!(bool)($user->is_approved ?? false)) {
+        // Allow admins to bypass approval gate
+        $isAdmin = (bool)($user->is_admin ?? false) || (($user->role ?? null) === 'admin');
+        if (!$isAdmin && !(bool)($user->is_approved ?? false)) {
             Auth::logout();
             throw ValidationException::withMessages([
                 'email' => 'Your account is pending admin approval.',
