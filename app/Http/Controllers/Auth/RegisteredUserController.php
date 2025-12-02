@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\EmailOtp;
 use App\Notifications\EmailOtpNotification;
+use App\Notifications\NewUserRegistered;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -58,6 +59,20 @@ class RegisteredUserController extends Controller
         // Try notifying via email; swallow errors to avoid blocking registration
         try {
             $user->notify(new EmailOtpNotification($code, $ttlMinutes));
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        // Notify all admins about the new registration (immediate delivery)
+        try {
+            $admins = User::query()
+                ->where(function($q) {
+                    $q->where('role', 'admin')->orWhere('is_admin', true);
+                })
+                ->get();
+            foreach ($admins as $admin) {
+                $admin->notifyNow(new NewUserRegistered($user));
+            }
         } catch (\Throwable $e) {
             report($e);
         }

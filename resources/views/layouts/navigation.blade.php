@@ -1,4 +1,4 @@
-<nav x-data="{ open: false }" class="glassmorphism-navbar fixed top-0 w-full z-50" data-notifications-index-url="{{ route('notifications.index') }}" data-notifications-mark-all-url="{{ route('notifications.mark-all-as-read') }}">
+<nav x-data="{ open: false }" class="glassmorphism-navbar fixed top-0 w-full z-50" data-notifications-index-url="{{ route('notifications.index', [], false) }}" data-notifications-mark-all-url="{{ route('notifications.mark-all-as-read', [], false) }}">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">

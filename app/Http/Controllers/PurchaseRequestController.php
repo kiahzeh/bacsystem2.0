@@ -120,9 +120,10 @@ class PurchaseRequestController extends Controller
         ]);
     
         // Notify ALL users (except the creator) when a new PR is created
+        // Use notifyNow to deliver immediately (bypass queue) so admins see alerts right away
         $allUsers = User::where('id', '!=', auth()->id())->get();
         foreach ($allUsers as $user) {
-            $user->notify(new NewPurchaseRequestCreated($purchaseRequest));
+            $user->notifyNow(new NewPurchaseRequestCreated($purchaseRequest));
         }
 
         return redirect()->route('purchase-requests.index')->with('success', 'Purchase request created successfully.');
@@ -201,7 +202,7 @@ class PurchaseRequestController extends Controller
         // Notify all other users
         $allUsers = \App\Models\User::where('id', '!=', auth()->id())->get();
         foreach ($allUsers as $user) {
-            $user->notify(new \App\Notifications\PurchaseRequestUpdated($purchaseRequest, $oldStatus, 'completed'));
+            $user->notifyNow(new \App\Notifications\PurchaseRequestUpdated($purchaseRequest, $oldStatus, 'completed'));
         }
 
         return redirect()->route('purchase-requests.show', $purchaseRequest)
@@ -295,7 +296,7 @@ class PurchaseRequestController extends Controller
         // Notify ALL users (except the creator) when PR is updated
         $allUsers = User::where('id', '!=', auth()->id())->get();
         foreach ($allUsers as $user) {
-            $user->notify(new PurchaseRequestUpdated($purchaseRequest, $oldStatus, 'updated'));
+            $user->notifyNow(new PurchaseRequestUpdated($purchaseRequest, $oldStatus, 'updated'));
         }
 
         return redirect()->route('purchase-requests.index')
@@ -507,7 +508,7 @@ class PurchaseRequestController extends Controller
         // Notify relevant recipients (department head, procurement, admins)
         $recipients = $this->getWorkflowRecipients($purchaseRequest);
         foreach ($recipients as $user) {
-            $user->notify(new PurchaseRequestUpdated($purchaseRequest, $oldStatus, 'step_skipped'));
+            $user->notifyNow(new PurchaseRequestUpdated($purchaseRequest, $oldStatus, 'step_skipped'));
         }
 
         return redirect()->route('purchase-requests.timeline', $purchaseRequest)
@@ -575,7 +576,7 @@ class PurchaseRequestController extends Controller
         // Notify relevant recipients (department head, procurement, admins)
         $recipients = $this->getWorkflowRecipients($purchaseRequest);
         foreach ($recipients as $user) {
-            $user->notify(new PurchaseRequestUpdated($purchaseRequest, $oldStatus, 'status_advanced'));
+            $user->notifyNow(new PurchaseRequestUpdated($purchaseRequest, $oldStatus, 'status_advanced'));
         }
 
         return redirect()->route('purchase-requests.timeline', $purchaseRequest)
@@ -643,7 +644,7 @@ class PurchaseRequestController extends Controller
         // Notify relevant recipients (department head, procurement, admins)
         $recipients = $this->getWorkflowRecipients($purchaseRequest);
         foreach ($recipients as $user) {
-            $user->notify(new PurchaseRequestUpdated($purchaseRequest, $oldStatus, 'step_removed'));
+            $user->notifyNow(new PurchaseRequestUpdated($purchaseRequest, $oldStatus, 'step_removed'));
         }
 
         return redirect()->route('purchase-requests.timeline', $purchaseRequest)
