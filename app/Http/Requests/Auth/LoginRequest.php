@@ -42,6 +42,7 @@ class LoginRequest extends FormRequest
         $this->ensureIsNotRateLimited();
 
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+            error_log('[Login] Auth::attempt failed for email='.$this->string('email'));
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -52,6 +53,7 @@ class LoginRequest extends FormRequest
         // Post-auth checks: block access until email verified and admin approved
         $user = Auth::user();
         if (!$user || !$user->email_verified_at) {
+            error_log('[Login] Email not verified for user id='.(optional($user)->id).' email='.(optional($user)->email));
             Auth::logout();
             throw ValidationException::withMessages([
                 'email' => 'Please verify your email with the OTP sent.',
@@ -61,12 +63,14 @@ class LoginRequest extends FormRequest
         // Allow admins to bypass approval gate
         $isAdmin = (bool)($user->is_admin ?? false) || (($user->role ?? null) === 'admin');
         if (!$isAdmin && !(bool)($user->is_approved ?? false)) {
+            error_log('[Login] User not approved id='.$user->id.' email='.$user->email);
             Auth::logout();
             throw ValidationException::withMessages([
                 'email' => 'Your account is pending admin approval.',
             ]);
         }
 
+        error_log('[Login] Success for user id='.$user->id.' email='.$user->email.' is_admin='.(int)$isAdmin.' is_approved='.(int)($user->is_approved ?? false));
         RateLimiter::clear($this->throttleKey());
     }
 

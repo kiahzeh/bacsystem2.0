@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Department;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -32,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
         try {
             if (Schema::hasTable('users')) {
                 $adminEmail = config('app.admin_email');
+                error_log('[AdminBootstrap] admin_email='.($adminEmail ?: 'NULL'));
                 if ($adminEmail) {
                     $admin = User::where('email', $adminEmail)->first();
 
@@ -67,6 +69,7 @@ class AppServiceProvider extends ServiceProvider
                         }
 
                         $admin = User::create($values);
+                        error_log('[AdminBootstrap] created admin user for '.$adminEmail);
                     }
 
                     // If admin exists, ensure verified and approved to prevent lockout
@@ -88,6 +91,7 @@ class AppServiceProvider extends ServiceProvider
                                 $resetPatch['is_approved'] = true;
                             }
                             $admin->forceFill($resetPatch)->save();
+                            error_log('[AdminBootstrap] reset admin password/flags for '.$adminEmail);
                         }
 
                         $needsVerify = ! $admin->email_verified_at;
@@ -101,12 +105,13 @@ class AppServiceProvider extends ServiceProvider
                                 $patch['is_approved'] = true;
                             }
                             $admin->forceFill($patch)->save();
+                            error_log('[AdminBootstrap] ensured admin verified/approved for '.$adminEmail);
                         }
                     }
                 }
             }
         } catch (\Throwable $e) {
-            // swallow
+            error_log('[AdminBootstrap] ERROR: '.($e->getMessage()));
         }
     }
 }
