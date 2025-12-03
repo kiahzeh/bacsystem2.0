@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\EmailOtp;
 use App\Notifications\EmailOtpNotification;
 use App\Notifications\NewUserRegistered;
+use App\Jobs\SendOtpEmail;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -45,6 +46,8 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
             'department_id' => 1, // Default department for new users
             'is_approved' => false,
+            'role' => 'user',
+            'is_admin' => false,
         ]);
 
         // Generate and send OTP
@@ -56,12 +59,8 @@ class RegisteredUserController extends Controller
             'expires_at' => now()->addMinutes($ttlMinutes),
         ]);
 
-        // Try notifying via email; swallow errors to avoid blocking registration
-        try {
-            $user->notify(new EmailOtpNotification($code, $ttlMinutes));
-        } catch (\Throwable $e) {
-            report($e);
-        }
+        // Send OTP email after the HTTP response to avoid blocking the request
+        SendOtpEmail::dispatch($user, $code, $ttlMinutes)->afterResponse();
 
         // Notify all admins about the new registration (immediate delivery)
         try {

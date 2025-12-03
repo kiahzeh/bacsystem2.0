@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\EmailOtp;
 use App\Models\User;
 use App\Notifications\EmailOtpNotification;
+use App\Jobs\SendOtpEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -65,11 +66,8 @@ class OtpVerificationController extends Controller
             'expires_at' => now()->addMinutes($ttlMinutes),
         ]);
 
-        try {
-            $user->notify(new EmailOtpNotification($code, $ttlMinutes));
-        } catch (\Throwable $e) {
-            report($e);
-        }
+        // Send OTP email after the HTTP response to avoid blocking the request
+        SendOtpEmail::dispatch($user, $code, $ttlMinutes)->afterResponse();
 
         return back()->with('success', 'A new OTP has been sent to your email.');
     }
