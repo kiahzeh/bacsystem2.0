@@ -208,15 +208,15 @@
                     </div>
 
                     <div class="overflow-x-auto glassmorphism-card rounded-lg overflow-y-auto relative">
-                        <table class="min-w-full table-auto border-collapse">
+                        <table class="min-w-full table-fixed border-collapse">
                             <thead>
                                 <tr class="glassmorphism-header text-white uppercase text-sm leading-normal">
                                     <th class="py-3 px-6 text-left font-semibold glass-table-heading">Name</th>
                                     <th class="py-3 px-6 text-left font-semibold glass-table-heading">Email</th>
-                                    <th class="py-3 px-6 text-left font-semibold glass-table-heading">Department</th>
+                                    <th class="py-3 px-6 text-center font-semibold glass-table-heading">Department</th>
                                     <th class="py-3 px-6 text-left font-semibold glass-table-heading">Role</th>
-                                    <th class="py-3 px-6 text-left font-semibold glass-table-heading">Status</th>
-                                    <th class="py-3 px-6 text-left font-semibold glass-table-heading">Actions</th>
+                                    <th class="py-3 px-6 text-center font-semibold glass-table-heading">Status</th>
+                                    <th class="py-3 px-6 text-center font-semibold glass-table-heading">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="text-white text-sm">
@@ -254,30 +254,30 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                         d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                                 </svg>
-                                                <span class="glass-table-text text-white">{{ $user->email }}</span>
+                                                <span class="glass-table-text text-white truncate max-w-[240px]">{{ $user->email }}</span>
                                             </div>
                                         </td>
-                                        <td class="py-4 px-6">
-                                            <div class="flex items-center">
+                                        <td class="py-4 px-6 text-center">
+                                            <div class="inline-flex items-center justify-center">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-white"
                                                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                         d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                                 </svg>
-                                                <span class="glass-table-text text-white">{{ $user->department ? $user->department->name : 'No Department' }}</span>
+                                                <span class="glass-table-text text-white truncate whitespace-nowrap max-w-[200px]">{{ $user->department ? $user->department->name : 'No Department' }}</span>
                                             </div>
                                         </td>
-                                        <td class="py-4 px-6">
+                                        <td class="py-4 px-6 text-center">
                                             @php
                                                 $roleClass = $user->role === 'admin'
                                                     ? 'bg-purple-500/20 text-purple-200'
                                                     : 'bg-blue-500/20 text-blue-200';
                                             @endphp
-                                            <span class="px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap glass-badge {{ $roleClass }}">
+                                            <span class="inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap glass-badge h-8 {{ $roleClass }}">
                                                 {{ ucfirst($user->role) }}
                                             </span>
                                         </td>
-                                        <td class="py-4 px-6">
+                                        <td class="py-4 px-6 text-center">
                                             @php
                                                 $approved = (bool) ($user->is_approved ?? false);
                                                 $statusClass = $approved
@@ -285,14 +285,14 @@
                                                     : 'bg-yellow-500/20 text-yellow-200';
                                                 $statusText = $approved ? 'Approved' : 'Pending Approval';
                                             @endphp
-                                            <span class="px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap glass-badge {{ $statusClass }}">
+                                            <span class="inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap glass-badge h-8 {{ $statusClass }}">
                                                 {{ $statusText }}
                                             </span>
                                         </td>
-                                        <td class="py-4 px-6">
-                                            <div class="flex items-center space-x-3">
+                                        <td class="py-4 px-6 text-center">
+                                            <div class="flex items-center justify-center space-x-2">
                                                 <a href="{{ route('users.edit', $user) }}" title="Edit" aria-label="Edit"
-                                                    class="inline-flex items-center glass-badge bg-green-500/20 text-green-200 px-3 py-1 rounded-full transition-all duration-200 shadow-sm hover:bg-green-500/30">
+                                                    class="inline-flex items-center h-8 glass-badge bg-green-500/20 text-green-200 px-3 py-1 rounded-full transition-all duration-200 shadow-sm hover:bg-green-500/30">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none"
                                                         viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -303,12 +303,12 @@
                                                 </a>
                                                 @if(!($user->is_approved ?? false))
                                                     <form action="{{ route('users.approve', $user) }}" method="POST"
-                                                        class="inline-flex items-center"
+                                                        class="inline-flex items-center h-8"
                                                         onsubmit="return confirm('Approve this user?');">
                                                         @csrf
                                                         @method('PATCH')
                                                         <button type="submit" title="Approve" aria-label="Approve"
-                                                            class="inline-flex items-center glass-badge bg-indigo-500/20 text-indigo-200 px-3 py-1 rounded-full transition-all duration-200 shadow-sm hover:bg-indigo-500/30">
+                                                            class="inline-flex items-center h-8 glass-badge bg-indigo-500/20 text-indigo-200 px-3 py-1 rounded-full transition-all duration-200 shadow-sm hover:bg-indigo-500/30">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                                             </svg>
@@ -318,16 +318,17 @@
                                                 @endif
                                                 @if($user->id !== auth()->id())
                                                     <form action="{{ route('users.destroy', $user) }}" method="POST"
-                                                        class="inline-flex items-center"
+                                                        class="inline-flex items-center h-8"
                                                         onsubmit="return confirm('Are you sure you want to delete this user?');">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" title="Delete" aria-label="Delete"
-                                                            class="inline-flex items-center glass-badge bg-red-500/20 text-red-200 px-2 py-1 rounded-full transition-all duration-200 shadow-sm hover:bg-red-500/30">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            class="inline-flex items-center h-8 glass-badge bg-red-500/20 text-red-200 px-3 py-1 rounded-full transition-all duration-200 shadow-sm hover:bg-red-500/30">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                             </svg>
+                                                            <span class="font-medium">Delete</span>
                                                         </button>
                                                     </form>
                                                 @endif

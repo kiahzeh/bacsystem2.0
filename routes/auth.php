@@ -46,6 +46,9 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    // Logged-in convenience route: shows approval status for the current user
+    Route::get('my-status', [ApprovalStatusController::class, 'show'])->name('my.status');
+
     Route::get('verify-email', EmailVerificationPromptController::class)
                 ->name('verification.notice');
 
