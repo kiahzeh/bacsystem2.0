@@ -40,7 +40,7 @@ services:
       - key: RUN_DB_SEED
         value: false
       - key: MAIL_MAILER
-        value: smtp
+        value: failover
       - key: MAIL_HOST
         value: smtp-relay.brevo.com
       - key: MAIL_PORT
@@ -51,8 +51,10 @@ services:
         sync: false
       - key: MAIL_ENCRYPTION
         value: tls
+      - key: MAIL_TIMEOUT
+        value: 10
       - key: MAIL_FROM_ADDRESS
-        sync: false
+        value: "2001104785@student.buksu.edu.ph"
       - key: MAIL_FROM_NAME
         value: "BAC System"
       # Brevo API key for transactional API (emails/SMS via BrevoService)
@@ -91,7 +93,7 @@ services:
       - key: DB_DATABASE
         value: /var/data/database.sqlite
       - key: MAIL_MAILER
-        value: smtp
+        value: failover
       - key: MAIL_HOST
         value: smtp-relay.brevo.com
       - key: MAIL_PORT
@@ -102,8 +104,10 @@ services:
         sync: false
       - key: MAIL_ENCRYPTION
         value: tls
+      - key: MAIL_TIMEOUT
+        value: 10
       - key: MAIL_FROM_ADDRESS
-        sync: false
+        value: "2001104785@student.buksu.edu.ph"
       - key: MAIL_FROM_NAME
         value: "BAC System"
       - key: BREVO_KEY

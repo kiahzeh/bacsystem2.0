@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\EmailOtp;
 use App\Notifications\EmailOtpNotification;
 use App\Notifications\NewUserRegistered;
+use App\Jobs\NotifyAdminsOfNewUser;
 use App\Jobs\SendOtpEmail;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Http\RedirectResponse;
@@ -62,19 +63,8 @@ class RegisteredUserController extends Controller
         // Send OTP email after the HTTP response to avoid blocking the request
         SendOtpEmail::dispatch($user, $code, $ttlMinutes)->afterResponse();
 
-        // Notify all admins about the new registration (immediate delivery)
-        try {
-            $admins = User::query()
-                ->where(function($q) {
-                    $q->where('role', 'admin')->orWhere('is_admin', true);
-                })
-                ->get();
-            foreach ($admins as $admin) {
-                $admin->notifyNow(new NewUserRegistered($user));
-            }
-        } catch (\Throwable $e) {
-            report($e);
-        }
+        // Notify admins after the HTTP response to avoid blocking
+        NotifyAdminsOfNewUser::dispatch($user)->afterResponse();
 
         return redirect()->route('otp.verify.show')
             ->with('pending_email', $user->email)
