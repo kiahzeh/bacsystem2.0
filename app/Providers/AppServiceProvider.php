@@ -42,11 +42,26 @@ class AppServiceProvider extends ServiceProvider
                         $adminPassword = (string) config('app.admin_password');
                         $adminName = (string) config('app.admin_name');
 
-                        // Attempt to assign Admin department if available; otherwise any department; else null
+                        // Ensure we have a valid department for the admin user
+                        // Prefer an 'Admin' department; create it if none exist
                         $deptId = null;
                         if (Schema::hasTable('departments')) {
                             $deptId = Department::where('name', 'Admin')->value('id')
                                 ?? Department::value('id');
+                            if (!$deptId) {
+                                $defaultDept = Department::firstOrCreate(
+                                    ['name' => 'Admin'],
+                                    ['description' => 'Default admin department']
+                                );
+                                $deptId = $defaultDept->id;
+                                error_log('[AdminBootstrap] created default department Admin id='.$deptId);
+                            }
+                        }
+
+                        // If department still cannot be determined (e.g., table missing), skip for now
+                        if (!$deptId) {
+                            error_log('[AdminBootstrap] departments table missing or no department id available; will retry on next request after migrations');
+                            return; // Defer admin creation until after migrations create departments
                         }
 
                         $values = [
@@ -74,6 +89,21 @@ class AppServiceProvider extends ServiceProvider
 
                     // If admin exists, ensure verified and approved to prevent lockout
                     if ($admin) {
+                        // If department_id is missing on the existing admin, assign default Admin department
+                        if (Schema::hasTable('departments') && empty($admin->department_id)) {
+                            $deptId = Department::where('name', 'Admin')->value('id')
+                                ?? Department::value('id');
+                            if (!$deptId) {
+                                $defaultDept = Department::firstOrCreate(
+                                    ['name' => 'Admin'],
+                                    ['description' => 'Default admin department']
+                                );
+                                $deptId = $defaultDept->id;
+                                error_log('[AdminBootstrap] created default department Admin id='.$deptId);
+                            }
+                            $admin->forceFill(['department_id' => $deptId])->save();
+                            error_log('[AdminBootstrap] ensured admin has department_id='.$deptId);
+                        }
                         // Optionally force-reset admin credentials and privileges on boot
                         $forceReset = filter_var(config('app.admin_reset_password_on_boot', false), FILTER_VALIDATE_BOOLEAN);
                         if ($forceReset) {
