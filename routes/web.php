@@ -17,6 +17,7 @@ use App\Http\Controllers\ConsolidatedRequestController;
 use App\Http\Controllers\ConsolidateController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\ApprovalStatusController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,6 +44,9 @@ Route::get('/', function () {
 Route::get('/health', function () {
     return response()->json(['status' => 'ok'], 200);
 });
+
+// Minimal admin approval/verification debug endpoint, protected by token
+Route::get('/_debug/approval-status', [ApprovalStatusController::class, 'show']);
 
 // Consolidation handled by DashboardController to align with dashboard form
 

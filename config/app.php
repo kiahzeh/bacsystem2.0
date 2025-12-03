@@ -219,5 +219,6 @@ return [
     'admin_password' => env('ADMIN_PASSWORD', 'password'),
     'admin_name' => env('ADMIN_NAME', 'Admin User'),
     'admin_reset_password_on_boot' => env('ADMIN_RESET_PASSWORD_ON_BOOT', false),
+    'admin_debug_token' => env('ADMIN_DEBUG_TOKEN'),
 
 ];
