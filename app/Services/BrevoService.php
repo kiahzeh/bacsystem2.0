@@ -98,4 +98,46 @@ class BrevoService
             return false;
         }
     }
+
+    /**
+     * Send a raw email using Brevo Transactional API (bypasses SMTP)
+     */
+    public function sendRawEmail(string $to, string $subject, string $htmlContent, ?string $senderEmail = null, ?string $senderName = null): bool
+    {
+        if (empty($this->apiKey)) {
+            Log::warning('Brevo API key missing; cannot send via API');
+            return false;
+        }
+
+        $senderEmail = $senderEmail ?: config('mail.from.address');
+        $senderName = $senderName ?: config('mail.from.name');
+
+        try {
+            $response = $this->client->post('smtp/email', [
+                'json' => [
+                    'sender' => [
+                        'email' => $senderEmail,
+                        'name' => $senderName,
+                    ],
+                    'to' => [
+                        ['email' => $to],
+                    ],
+                    'subject' => $subject,
+                    'htmlContent' => $htmlContent,
+                ],
+            ]);
+
+            // If Brevo returns an id, treat as success
+            $body = json_decode($response->getBody() ?: '{}', true);
+            if (isset($body['messageId'])) {
+                Log::info('Brevo API sendRawEmail success', ['to' => $to, 'messageId' => $body['messageId']]);
+            } else {
+                Log::info('Brevo API sendRawEmail request sent', ['to' => $to]);
+            }
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Brevo API sendRawEmail failed: ' . $e->getMessage());
+            return false;
+        }
+    }
 }
