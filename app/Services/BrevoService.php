@@ -40,7 +40,7 @@ class BrevoService
 
             return json_decode($response->getBody(), true);
         } catch (\Exception $e) {
-            Log::error('Brevo API Error: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Brevo API Error: ' . $e->getMessage());
             return false;
         }
     }
@@ -58,7 +58,7 @@ class BrevoService
 
             return json_decode($response->getBody(), true);
         } catch (\Exception $e) {
-            Log::error('Brevo SMS API Error: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Brevo SMS API Error: ' . $e->getMessage());
             return false;
         }
     }
@@ -76,7 +76,7 @@ class BrevoService
 
             return true;
         } catch (\Exception $e) {
-            \Log::error('Brevo email sending failed: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Brevo email sending failed: ' . $e->getMessage());
             return false;
         }
     }
@@ -94,7 +94,7 @@ class BrevoService
 
             return true;
         } catch (\Exception $e) {
-            \Log::error('Brevo template email sending failed: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Brevo template email sending failed: ' . $e->getMessage());
             return false;
         }
     }
@@ -105,7 +105,7 @@ class BrevoService
     public function sendRawEmail(string $to, string $subject, string $htmlContent, ?string $senderEmail = null, ?string $senderName = null): bool
     {
         if (empty($this->apiKey)) {
-            Log::warning('Brevo API key missing; cannot send via API');
+            \Illuminate\Support\Facades\Log::warning('Brevo API key missing; cannot send via API');
             return false;
         }
 
@@ -130,13 +130,13 @@ class BrevoService
             // If Brevo returns an id, treat as success
             $body = json_decode($response->getBody() ?: '{}', true);
             if (isset($body['messageId'])) {
-                Log::info('Brevo API sendRawEmail success', ['to' => $to, 'messageId' => $body['messageId']]);
+                \Illuminate\Support\Facades\Log::info('Brevo API sendRawEmail success', ['to' => $to, 'messageId' => $body['messageId']]);
             } else {
-                Log::info('Brevo API sendRawEmail request sent', ['to' => $to]);
+                \Illuminate\Support\Facades\Log::info('Brevo API sendRawEmail request sent', ['to' => $to]);
             }
             return true;
         } catch (\Exception $e) {
-            Log::error('Brevo API sendRawEmail failed: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Brevo API sendRawEmail failed: ' . $e->getMessage());
             return false;
         }
     }

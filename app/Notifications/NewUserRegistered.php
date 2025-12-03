@@ -11,14 +11,14 @@ class NewUserRegistered extends Notification
 {
     use Queueable;
 
-    public function __construct(public User $newUser)
+    public function __construct(public User $newUser, public bool $sendMail = true)
     {
     }
 
     public function via($notifiable)
     {
-        // Keep database for in-app dropdown; mail optional based on env
-        return ['database', 'mail'];
+        // Keep database for in-app dropdown; mail optional via flag
+        return $this->sendMail ? ['database', 'mail'] : ['database'];
     }
 
     public function toMail($notifiable)
@@ -44,4 +44,3 @@ class NewUserRegistered extends Notification
         ];
     }
 }
-
