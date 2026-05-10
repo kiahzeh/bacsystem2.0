@@ -29,6 +29,10 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
+        if ($this->app->runningInConsole()) {
+            return;
+        }
+
         // Ensure admin can log in by auto-creating (if missing), verifying, and approving the seeded admin
         try {
             if (Schema::hasTable('users')) {

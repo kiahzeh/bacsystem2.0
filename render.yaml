@@ -28,9 +28,13 @@ services:
       - key: QUEUE_CONNECTION
         value: database
       - key: DB_CONNECTION
-        value: sqlite
+        value: pgsql
       - key: DB_DATABASE
-        value: /var/data/database.sqlite
+        value: neondb
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_SSLMODE
+        value: require
       - key: MIGRATE_RETRIES
         value: 10
       - key: MIGRATE_SLEEP
@@ -89,9 +93,13 @@ services:
       - key: QUEUE_CONNECTION
         value: database
       - key: DB_CONNECTION
-        value: sqlite
+        value: pgsql
       - key: DB_DATABASE
-        value: /var/data/database.sqlite
+        value: neondb
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_SSLMODE
+        value: require
       - key: MAIL_MAILER
         value: failover
       - key: MAIL_HOST
