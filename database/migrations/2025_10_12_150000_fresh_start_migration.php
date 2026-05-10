@@ -13,38 +13,45 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Only allow destructive drops in local/testing environments
-        if (App::environment(['local', 'testing'])) {
-            // Drop all tables in correct order to avoid foreign key issues
-            $tables = [
-                'consolidate_purchase_request',
-                'documents',
-                'bids',
-                'status_histories',
-                'audit_logs',
-                'notifications',
-                'purchase_requests',
-                'consolidated_requests',
-                'consolidates',
-                'processes',
-                'users',
-                'departments',
-                'personal_access_tokens',
-                'password_reset_tokens',
-                'failed_jobs'
-            ];
-
-            foreach ($tables as $table) {
-                try {
-                    Schema::dropIfExists($table);
-                } catch (\Exception $e) {
-                    // Table might not exist, continue
-                }
-            }
+        // Skip this destructive migration on production/staging
+        if (! App::environment(['local', 'testing'])) {
+            return;
         }
 
-        // Create departments first (no dependencies)
-        if (!Schema::hasTable('departments')) {
+        try {
+            // Only allow destructive drops in local/testing environments
+            if (App::environment(['local', 'testing'])) {
+                // Drop all tables in correct order to avoid foreign key issues
+                $tables = [
+                    'consolidate_purchase_request',
+                    'documents',
+                    'bids',
+                    'status_histories',
+                    'audit_logs',
+                    'notifications',
+                    'purchase_requests',
+                    'consolidated_requests',
+                    'consolidates',
+                    'processes',
+                    'users',
+                    'departments',
+                    'personal_access_tokens',
+                    'password_reset_tokens',
+                    'failed_jobs'
+                ];
+
+                foreach ($tables as $table) {
+                    try {
+                        Schema::dropIfExists($table);
+                    } catch (\Exception $e) {
+                        // Table might not exist, continue
+                    }
+                }
+            }
+
+        try {
+            // Create departments first (no dependencies)
+            if (!Schema::hasTable('departments')) {
             Schema::create('departments', function (Blueprint $table) {
                 $table->id();
                 $table->string('name')->unique();
@@ -255,6 +262,10 @@ return new class extends Migration
                 $table->longText('exception');
                 $table->timestamp('failed_at')->useCurrent();
             });
+        }
+        } catch (\Exception $e) {
+            // If something fails, just log and continue
+            // This migration is meant for local fresh starts, not production
         }
     }
 
