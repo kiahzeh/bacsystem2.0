@@ -49,7 +49,6 @@ return new class extends Migration
                 }
             }
 
-        try {
             // Create departments first (no dependencies)
             if (!Schema::hasTable('departments')) {
             Schema::create('departments', function (Blueprint $table) {
