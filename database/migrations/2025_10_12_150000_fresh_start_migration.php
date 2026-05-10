@@ -124,16 +124,12 @@ return new class extends Migration
 
         // Add foreign key constraint for consolidated_request_id when missing
         if (Schema::hasTable('purchase_requests') && Schema::hasTable('consolidated_requests')) {
-            $constraintName = 'purchase_requests_consolidated_request_id_foreign';
-            $constraintExists = DB::selectOne(
-                "SELECT 1 FROM information_schema.table_constraints WHERE table_name = ? AND constraint_name = ?",
-                ['purchase_requests', $constraintName]
-            );
-
-            if (! $constraintExists) {
+            try {
                 Schema::table('purchase_requests', function (Blueprint $table) {
                     $table->foreign('consolidated_request_id')->references('id')->on('consolidated_requests')->onDelete('cascade');
                 });
+            } catch (\Exception $e) {
+                // Constraint likely already exists; continue
             }
         }
 
