@@ -19,25 +19,12 @@ class DashboardController extends Controller
 {
     protected function isAdmin($user): bool
     {
-        if (!$user) {
-            return false;
-        }
-        // Prefer explicit role or flag if available
-        if (isset($user->role) && $user->role === 'admin') {
-            return true;
-        }
-        if (isset($user->is_admin) && ((int) $user->is_admin === 1 || $user->is_admin === true)) {
-            return true;
-        }
-        // Fallback to method if defined
-        try {
-            if (method_exists($user, 'isAdmin')) {
-                return (bool) $user->isAdmin();
-            }
-        } catch (\Throwable $e) {
-            // ignore and treat as non-admin
-        }
-        return false;
+        return $user && (
+            $user->role === 'admin' ||
+            $user->is_admin === true ||
+            (int) $user->is_admin === 1 ||
+            (method_exists($user, 'isAdmin') && $user->isAdmin())
+        );
     }
 
     public function index(Request $request)
@@ -169,7 +156,8 @@ class DashboardController extends Controller
         $stats = [
             'total_requests' => PurchaseRequest::where('user_id', $user->id)->count(),
             'pending_requests' => PurchaseRequest::where('user_id', $user->id)
-                ->whereNotIn('status', ['completed', 'cancelled'])->count(),
+                ->whereNotIn('status', ['Completed', 'Cancelled', 'completed', 'cancelled'])
+                ->count(),
             'total_documents' => Document::whereHas('purchaseRequest', function($query) use ($user) {
                 $query->where('user_id', $user->id);
             })->count(),
@@ -182,7 +170,8 @@ class DashboardController extends Controller
             $departmentStats = [
                 'total_requests' => PurchaseRequest::where('department_id', $user->department_id)->count(),
                 'pending_requests' => PurchaseRequest::where('department_id', $user->department_id)
-                    ->whereNotIn('status', ['completed', 'cancelled'])->count(),
+                    ->whereNotIn('status', ['Completed', 'Cancelled', 'completed', 'cancelled'])
+                    ->count(),
                 'total_documents' => Document::whereHas('purchaseRequest', function($query) use ($user) {
                     $query->where('department_id', $user->department_id);
                 })->count()
@@ -234,32 +223,32 @@ class DashboardController extends Controller
         }
 
         // Monthly PR trend (last 12 months) — DB agnostic
-        $startMonth = Carbon::now()->subMonths(11)->startOfMonth();
-        $connectionName = config('database.default');
-        $driver = config("database.connections.$connectionName.driver");
-        $dateExpr = null;
-        switch ($driver) {
-            case 'pgsql':
-                $dateExpr = "to_char(created_at, 'YYYY-MM')";
-                break;
-            case 'mysql':
-            case 'mariadb':
-                $dateExpr = "DATE_FORMAT(created_at, '%Y-%m')";
-                break;
-            case 'sqlite':
-            default:
-                $dateExpr = "strftime('%Y-%m', created_at)";
-                break;
-        }
-
-        $rawMonthly = PurchaseRequest::selectRaw("$dateExpr as ym, COUNT(*) as total")
-            ->where('created_at', '>=', $startMonth)
-            ->groupBy('ym')
-            ->orderBy('ym')
-            ->pluck('total', 'ym');
-
         $prMonthlyLabels = [];
         $prMonthlyData = [];
+        $rawMonthly = collect();
+
+        try {
+            $startMonth = Carbon::now()->subMonths(11)->startOfMonth();
+            $connection = DB::connection()->getDriverName();
+
+            $rawMonthly = PurchaseRequest::query()
+                ->select(
+                    DB::raw(match ($connection) {
+                        'mysql', 'mariadb' => "DATE_FORMAT(created_at, '%Y-%m') as ym",
+                        'pgsql' => "to_char(created_at, 'YYYY-MM') as ym",
+                        default => "strftime('%Y-%m', created_at) as ym", // sqlite
+                    }),
+                    DB::raw('COUNT(*) as total')
+                )
+                ->where('created_at', '>=', $startMonth)
+                ->groupBy('ym')
+                ->orderBy('ym')
+                ->pluck('total', 'ym');
+        } catch (\Throwable $e) {
+            Log::error('Failed to generate monthly PR trend', ['error' => $e->getMessage()]);
+            // In case of error, we'll have empty chart data
+        }
+
         for ($i = 11; $i >= 0; $i--) {
             $date = Carbon::now()->subMonths($i);
             $monthKey = $date->format('Y-m');

@@ -1,172 +1,69 @@
 # 🚀 Deployment Guide for BAC Purchase Request System
 
-## Quick Start - Deploy to Railway (Recommended for Students)
+This guide provides instructions for deploying the BAC Purchase Request System to various cloud platforms.
 
-### Step 1: Prepare Your Code
+## Table of Contents
 
-1. **Create a GitHub Repository**
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git branch -M main
-   git remote add origin https://github.com/yourusername/bac-purchase-system.git
-   git push -u origin main
-   ```
+- [General Setup & Pre-Deployment](#-general-setup--pre-deployment)
+- [Supported Platforms](#-supported-platforms)
+  - [Render (Recommended)](#-deploy-to-render-recommended)
+  - [Railway](#-deploy-to-railway)
+  - [DigitalOcean App Platform](#-deploy-to-digitalocean-app-platform)
+  - [Vercel (Not Recommended for this App)](#-deploy-to-vercel-not-recommended-for-this-app)
+- [Post-Deployment Steps](#-post-deployment-steps)
+- [Troubleshooting](#-troubleshooting)
+- [Cost Comparison](#-cost-comparison)
 
-2. **Create Railway Account**
-   - Go to [railway.app](https://railway.app)
-   - Sign up with GitHub
-   - Click "New Project" → "Deploy from GitHub repo"
+---
 
-### Step 2: Environment Configuration
+## ✅ General Setup & Pre-Deployment
 
-Create these environment variables in Railway:
+Before deploying to any platform, ensure you have completed these steps.
 
+### 1. Code Preparation
+- [x] **Create a GitHub Repository:** Your code must be in a GitHub repository for these platforms to access it.
+- [x] **Remove Sensitive Data:** Never commit secrets like API keys or passwords to your repository. Use environment variables instead.
+- [x] **Check `composer.json`:** Ensure all required PHP packages are listed.
+- [x] **Create a `.gitignore` file:** Use the standard Laravel `.gitignore` to exclude `vendor`, `.env`, `storage/logs`, etc.
+
+### 2. Generate `APP_KEY`
+Your application will fail with a 500 error without a valid `APP_KEY`. Generate one locally and copy it to your hosting provider's environment variables.
+
+```bash
+# Run this in your local project terminal
+php artisan key:generate --show
 ```
-APP_NAME=BAC Purchase Request System
+
+Copy the output (e.g., `base64:xxxxxxxx...`) and set it as the `APP_KEY` environment variable on your chosen platform.
+
+### 3. Environment Variables
+All platforms require you to set environment variables. Here are the most common ones. Refer to the platform-specific sections for database details.
+
+```ini
+# Application
+APP_NAME="BAC Purchase Request System"
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://your-app-name.railway.app
-APP_KEY=base64:<paste-generated-key>
+APP_URL=https://<your-app-url>
+APP_KEY= # Paste the key you generated here
 
-DB_CONNECTION=sqlite
-DB_DATABASE=/var/www/html/storage/database.sqlite
+# Logging
+LOG_CHANNEL=stderr
 
+# Mail (using Brevo/Sendinblue as an example)
 MAIL_MAILER=smtp
 MAIL_HOST=smtp-relay.brevo.com
 MAIL_PORT=587
 MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS=your-email@example.com
-MAIL_FROM_NAME=BAC Purchase System
-MAIL_USERNAME=<optional>
-MAIL_PASSWORD=<optional>
-
-MIGRATE_RETRIES=10
-MIGRATE_SLEEP=5
-SKIP_AUTO_MIGRATE=false
-SEED_ON_DEPLOY=true
-SEEDER_CLASS=DatabaseSeeder
-
-BREVO_KEY=<paste-your-brevo-api-key>
-TWILIO_ACCOUNT_SID=<paste-your-twilio-sid>
-TWILIO_AUTH_TOKEN=<paste-your-twilio-token>
-TWILIO_FROM_NUMBER=<paste-your-twilio-number>
-```
-
-### Step 3: Deploy
-
-1. Connect your GitHub repository to Railway
-2. Railway will automatically detect it's a Laravel app
-3. Add the environment variables above
-4. Deploy!
-
----
-
-## Alternative: Deploy to Vercel (Free)
-
-### Step 1: Install Vercel CLI
-```bash
-npm i -g vercel
-```
-
-### Step 2: Create vercel.json
-```json
-{
-  "version": 2,
-  "builds": [
-    {
-      "src": "public/index.php",
-      "use": "@vercel/php"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "public/index.php"
-    }
-  ],
-  "env": {
-    "APP_ENV": "production",
-    "APP_DEBUG": "false"
-  }
-}
-```
-
-### Step 3: Deploy
-```bash
-vercel --prod
+MAIL_USERNAME=<brevo-smtp-login>
+MAIL_PASSWORD=<brevo-smtp-password>
+MAIL_FROM_ADDRESS=noreply@example.com
+MAIL_FROM_NAME="${APP_NAME}"
 ```
 
 ---
 
-## Alternative: Deploy to DigitalOcean App Platform
-
-### Step 1: Create App Spec
-Create `.do/app.yaml`:
-```yaml
-name: bac-purchase-system
-services:
-- name: web
-  source_dir: /
-  github:
-    repo: yourusername/bac-purchase-system
-    branch: main
-  run_command: |
-    composer install --no-dev --optimize-autoloader
-    php artisan key:generate
-    php artisan migrate --force
-    php artisan config:cache
-    php artisan route:cache
-    php artisan view:cache
-    php artisan serve --host=0.0.0.0 --port=8080
-  environment_slug: php
-  instance_count: 1
-  instance_size_slug: basic-xxs
-  http_port: 8080
-  envs:
-  - key: APP_ENV
-    value: production
-  - key: APP_DEBUG
-    value: "false"
-  - key: DB_CONNECTION
-    value: sqlite
-  - key: DB_DATABASE
-    value: /workspace/database/database.sqlite
-databases:
-- name: db
-  engine: MYSQL
-  version: "8"
-```
-
----
-
-## Pre-Deployment Checklist
-
-### ✅ Code Preparation
-- [ ] Remove any sensitive data from code
-- [ ] Ensure all dependencies are in composer.json
-- [ ] Test the application locally
-- [ ] Create a .gitignore file
-
-### ✅ Database Setup
-- [ ] Run migrations: `php artisan migrate`
-- [ ] Seed initial data: `php artisan db:seed`
-- [ ] Test database connections
-
-### ✅ File Permissions
-- [ ] Ensure storage/ and bootstrap/cache/ are writable
-- [ ] Set proper permissions for uploaded files
-
-### ✅ Environment Variables
-- [ ] Generate APP_KEY: `php artisan key:generate`
-- [ ] Configure database connection
-- [ ] Set up email configuration
-- [ ] Configure SMS settings (if using)
-
----
-
-## Post-Deployment Steps
+## 🏁 Post-Deployment Steps
 
 1. **Run Migrations**
    ```bash
@@ -175,19 +72,16 @@ databases:
 
 2. **Seed Database**
    ```bash
-   php artisan db:seed
+   # It's safer to run seeders manually after the first deploy
+   php artisan db:seed --class=YourSeederClass --force
    ```
 
 3. **Clear Caches**
    ```bash
+   # The start.sh script handles this, but you can run it manually if needed
    php artisan config:cache
    php artisan route:cache
    php artisan view:cache
-   ```
-
-4. **Set File Permissions**
-   ```bash
-   chmod -R 755 storage bootstrap/cache
    ```
 
 5. **Optional: Use Deploy Script Locally/On Server**
@@ -197,16 +91,15 @@ bash scripts/deploy.sh
    This installs prod dependencies, runs migrations, builds assets, and caches config/routes/views.
 
 ### Seeding on Deploy
+**Warning:** Automatic seeding on every deploy (`RUN_DB_SEED=true`) is risky in production as it may duplicate or overwrite data. It's recommended to run seeds manually.
 
-- Enable seeding by setting `SEED_ON_DEPLOY=true` in your environment.
-- To run a specific seeder, set `SEEDER_CLASS=YourSeederClass`.
-- Behavior:
-  - When `SEEDER_CLASS` is provided, the script runs `migrate --force` then `db:seed --class=SEEDER_CLASS --force`.
-  - Otherwise, it runs `migrate --force --seed` which triggers `DatabaseSeeder`.
+- To enable, set `RUN_DB_SEED=true`.
+- To run a specific seeder, also set `SEEDER_CLASS=YourSeederClass`.
+- If `RUN_DB_SEED` is true and `SEEDER_CLASS` is not set, it will run `DatabaseSeeder`.
 
 ---
 
-## Troubleshooting
+## ❓ Troubleshooting
 
 ### Common Issues:
 
@@ -225,30 +118,9 @@ php artisan view:clear
 
 ---
 
-## Cost Comparison
+## 📦 Supported Platforms
 
-| Platform | Free Tier | Paid Plans | Best For |
-|----------|-----------|------------|----------|
-| Railway | ✅ | $5+/month | Students |
-| Vercel | ✅ | $20+/month | Static sites |
-| DigitalOcean | ❌ | $5+/month | Production |
-| Heroku | ❌ | $7+/month | Easy deployment |
-
----
-
-## Need Help?
-
-If you encounter any issues:
-1. Check the logs in your hosting platform
-2. Verify all environment variables are set
-3. Ensure database migrations ran successfully
-4. Check file permissions
-
-Good luck with your deployment! 🎉
-
----
-
-## Render Post-Deploy (Recommended Settings)
+### ⭐ Deploy to Render (Recommended)
 
 This project includes a Docker‑based Render blueprint (`render.yaml`) tailored for the free tier and PostgreSQL via `DATABASE_URL`.
 
@@ -259,19 +131,19 @@ This project includes a Docker‑based Render blueprint (`render.yaml`) tailored
 - Laravel runtime: `FILESYSTEM_DISK=public`, `SESSION_DRIVER=file`, `CACHE_DRIVER=file`, `QUEUE_CONNECTION=sync`.
 - Startup: storage symlink, config cache, and automatic migrations (`php artisan migrate --force`).
 
-### Deploy to Render (Free Tier)
+#### Deploy with PostgreSQL (Free Tier)
 
-1) Prerequisites
+1. **Prerequisites**
 - Render account
 - GitHub repository connected to Render (Blueprint deploy)
 - Free PostgreSQL (Neon recommended) for a persistent database
 
-2) Create a Neon database (recommended)
+2. **Create a Neon database (recommended)**
 - Sign up at https://neon.tech and create a project
 - Copy the connection string (format):
   `postgresql://USER:PASSWORD@HOST:PORT/DBNAME?sslmode=require`
 
-3) Configure environment variables on the Render web service
+3. **Configure environment variables on the Render web service**
 ```
 APP_ENV=production
 APP_DEBUG=false

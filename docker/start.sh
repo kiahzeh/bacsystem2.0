@@ -49,13 +49,10 @@ if [ ! -L /var/www/html/public/storage ]; then
   php artisan storage:link || true
 fi
 
-# Proactively clear caches to avoid stale compiled views/routes/config
-php artisan optimize:clear || true
-php artisan view:clear || true
-php artisan route:clear || true
-php artisan cache:clear || true
-
-# Refresh config and run migrations if not skipped
+# Clear old caches and build new ones for production
+# optimize:clear is a good single command for this in newer Laravel versions
+# but being explicit is safer.
+php artisan view:clear
 php artisan config:clear || true
 php artisan config:cache || true
 
@@ -85,23 +82,26 @@ if [ "${DB_CONNECTION:-}" = "sqlite" ]; then
   esac
 fi
 
-if [ "${SKIP_AUTO_MIGRATE:-false}" != "true" ]; then
-  RETRIES="${MIGRATE_RETRIES:-1}"
-  SLEEP_SECS="${MIGRATE_SLEEP:-5}"
-  ATTEMPT=1
-  until php artisan migrate --force; do
-    echo "Migration attempt ${ATTEMPT}/${RETRIES} failed"
-    if [ "$ATTEMPT" -ge "$RETRIES" ]; then
-      echo "Migrations failed after ${RETRIES} attempts; continuing startup"
-      break
+# Run migrations if not skipped.
+# For SQLite, it's often safer to migrate before the server starts if possible,
+# but this retry loop is good for remote databases like Postgres/MySQL.
+if [ "${SKIP_AUTO_MIGRATE:-false}" != "true" ] && [ "${DB_CONNECTION:-}" != "sqlite" ]; then
+    RETRIES="${MIGRATE_RETRIES:-1}"
+    SLEEP_SECS="${MIGRATE_SLEEP:-5}"
+    ATTEMPT=1
+    until php artisan migrate --force; do
+        echo "Migration attempt ${ATTEMPT}/${RETRIES} failed"
+        if [ "$ATTEMPT" -ge "$RETRIES" ]; then
+            echo "Migrations failed after ${RETRIES} attempts; continuing startup"
+            break
+        fi
+        ATTEMPT=$((ATTEMPT+1))
+        echo "Retrying in ${SLEEP_SECS}s..."
+        sleep "$SLEEP_SECS"
+    done
+    if [ "${RUN_DB_SEED:-false}" = "true" ]; then
+        php artisan db:seed --force || true
     fi
-    ATTEMPT=$((ATTEMPT+1))
-    echo "Retrying in ${SLEEP_SECS}s..."
-    sleep "$SLEEP_SECS"
-  done
-  if [ "${RUN_DB_SEED:-false}" = "true" ]; then
-    php artisan db:seed --force || true
-  fi
 fi
 
 exec /usr/local/bin/apache2-foreground
