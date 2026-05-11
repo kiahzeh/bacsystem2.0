@@ -12,6 +12,9 @@ return new class extends Migration
      */
     public function up()
     {
+        // This is a dangerous, destructive migration. Disabling it to prevent data loss.
+        // The schema should be consolidated into the initial create_purchase_requests_table migration.
+        return;
         // If the purchase_requests table already exists, skip this destructive recreation
         if (Schema::hasTable('purchase_requests')) {
             return;

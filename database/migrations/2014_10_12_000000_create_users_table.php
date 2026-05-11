@@ -16,23 +16,24 @@ return new class extends Migration
             return;
         }
 
-       Schema::create('users', function (Blueprint $table) {
-    $table->id();
-    $table->string('name');
-    $table->string('email')->unique();
-    $table->timestamp('email_verified_at')->nullable();
-    $table->string('password');
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('username')->unique()->nullable();
+            $table->string('email')->unique();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('password');
+            $table->string('profile_picture')->nullable();
 
-    $table->foreignId('department_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('department_id')->nullable()->constrained()->onDelete('set null');
 
-    $table->boolean('is_approved')->default(false);
-    $table->boolean('is_admin')->default(false);
+            $table->string('role')->default('user'); // e.g., 'admin', 'user'
+            $table->boolean('is_admin')->default(false); // Legacy admin flag
+            $table->boolean('is_approved')->default(false); // For new user approval
 
-    $table->string('role')->default('user');
-
-    $table->rememberToken();
-    $table->timestamps();
-});
+            $table->rememberToken();
+            $table->timestamps();
+        });
     }
 
     /**
